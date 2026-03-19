@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: c4_config_exporter
+Version: 1.2
+Requires-Dist: c4_lib
+Dynamic: requires-dist
