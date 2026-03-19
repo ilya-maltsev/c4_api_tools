@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Interfaces - Continent 4{% endblock %}
+{% block page_title %}Network Interfaces{% endblock %}
+{% block content %}
+<div class="table-wrap">
+    <table class="datatable">
+        <thead><tr><th>Name</th><th>Status</th><th>Addresses</th><th>MTU</th><th>Usage</th><th>Anti-Spoofing</th><th>Clear DF</th></tr></thead>
+        <tbody>
+        {% for iface in interfaces %}
+        <tr>
+            <td><strong>{{ iface.name }}</strong></td>
+            <td><span class="badge {% if iface.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if iface.is_enabled %}UP{% else %}DOWN{% endif %}</span></td>
+            <td>{{ iface.address_display }}</td>
+            <td>{{ iface.mtu }}</td>
+            <td>{{ iface.usage }}</td>
+            <td><span class="badge {% if iface.anti_spoofing %}badge-on{% else %}badge-off{% endif %}">{% if iface.anti_spoofing %}ON{% else %}OFF{% endif %}</span></td>
+            <td><span class="badge {% if iface.clear_df_bit %}badge-on{% else %}badge-off{% endif %}">{% if iface.clear_df_bit %}ON{% else %}OFF{% endif %}</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Services - Continent 4{% endblock %}
+{% block page_title %}Network Services{% endblock %}
+{% block content %}
+<div class="table-wrap">
+    <table class="datatable">
+        <thead><tr><th>Service</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for svc in services %}
+        <tr>
+            <td><strong>{{ svc.component_type }}</strong></td>
+            <td><span class="badge {% if svc.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if svc.is_enabled %}Enabled{% else %}Disabled{% endif %}</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

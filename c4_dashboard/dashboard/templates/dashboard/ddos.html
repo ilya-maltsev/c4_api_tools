@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}DDoS Protection - Continent 4{% endblock %}
+{% block page_title %}DDoS Protection{% endblock %}
+{% block content %}
+{% if ddos %}
+<div class="cards">
+    <div class="card">
+        <div class="card-label">Mode</div>
+        <div class="card-value"><span class="badge {% if ddos.mode == 'off' %}badge-off{% else %}badge-on{% endif %}">{{ ddos.mode|upper }}</span></div>
+    </div>
+    <div class="card">
+        <div class="card-label">Action</div>
+        <div class="card-value">{{ ddos.action|upper|default:"-" }}</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Blocking Time</div>
+        <div class="card-value">{{ ddos.blocking_time }}s</div>
+    </div>
+</div>
+{% endif %}
+
+<div class="table-wrap">
+    <table class="datatable">
+        <thead><tr><th>Attack Type</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for rule in ddos_rules %}
+        <tr>
+            <td><strong>{{ rule.attack_type }}</strong></td>
+            <td><span class="badge {% if rule.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if rule.is_enabled %}Enabled{% else %}Disabled{% endif %}</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

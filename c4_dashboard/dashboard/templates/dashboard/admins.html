@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Administrators - Continent 4{% endblock %}
+{% block page_title %}Administrators{% endblock %}
+{% block content %}
+<div class="table-wrap">
+    <table class="datatable">
+        <thead><tr><th>Login</th><th>Full Name</th><th>Status</th><th>Password Auth</th><th>Cert Auth</th><th>Password Expires</th><th>Created</th></tr></thead>
+        <tbody>
+        {% for adm in admins %}
+        <tr>
+            <td><strong>{{ adm.login }}</strong></td>
+            <td>{{ adm.full_name|default:"-" }}</td>
+            <td><span class="badge {% if adm.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if adm.is_enabled %}Active{% else %}Disabled{% endif %}</span></td>
+            <td>{% if adm.password_auth %}<span class="badge badge-on">Yes</span>{% else %}-{% endif %}</td>
+            <td>{% if adm.cert_auth %}<span class="badge badge-on">Yes</span>{% else %}-{% endif %}</td>
+            <td>{{ adm.password_expired_date|default:"-" }}</td>
+            <td>{{ adm.created_at|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Continent 4 Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'dashboard/style.css' %}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-brand"><span>C4</span> Dashboard</div>
+
+        <div class="sidebar-section">Monitor</div>
+        <a href="{% url 'dashboard' %}" class="{% if page == 'dashboard' %}active{% endif %}">
+            <span class="icon">&#9632;</span> Dashboard
+        </a>
+
+        <div class="sidebar-section">Network</div>
+        <a href="{% url 'interfaces' %}" class="{% if page == 'interfaces' %}active{% endif %}">
+            <span class="icon">&#9700;</span> Interfaces
+        </a>
+        <a href="{% url 'routes' %}" class="{% if page == 'routes' %}active{% endif %}">
+            <span class="icon">&#8644;</span> Static Routes
+        </a>
+        <a href="{% url 'services' %}" class="{% if page == 'services' %}active{% endif %}">
+            <span class="icon">&#9881;</span> Services
+        </a>
+
+        <div class="sidebar-section">Policy & Objects</div>
+        <a href="{% url 'firewall_rules' %}" class="{% if page == 'firewall_rules' %}active{% endif %}">
+            <span class="icon">&#9211;</span> Firewall Rules
+        </a>
+        <a href="{% url 'app_exceptions' %}" class="{% if page == 'app_exceptions' %}active{% endif %}">
+            <span class="icon">&#9776;</span> App Exceptions
+        </a>
+
+        <div class="sidebar-section">Security</div>
+        <a href="{% url 'ddos' %}" class="{% if page == 'ddos' %}active{% endif %}">
+            <span class="icon">&#9888;</span> DDoS Protection
+        </a>
+        <a href="{% url 'certificates' %}" class="{% if page == 'certificates' %}active{% endif %}">
+            <span class="icon">&#9919;</span> Certificates
+        </a>
+
+        <div class="sidebar-section">VPN</div>
+        <a href="{% url 'vpn' %}" class="{% if page == 'vpn' %}active{% endif %}">
+            <span class="icon">&#8660;</span> VPN
+        </a>
+
+        <div class="sidebar-section">System</div>
+        <a href="{% url 'admins' %}" class="{% if page == 'admins' %}active{% endif %}">
+            <span class="icon">&#9786;</span> Administrators
+        </a>
+        <a href="{% url 'password_policy' %}" class="{% if page == 'password_policy' %}active{% endif %}">
+            <span class="icon">&#9919;</span> Password Policy
+        </a>
+        <a href="{% url 'import_config' %}" class="{% if page == 'import_config' %}active{% endif %}">
+            <span class="icon">&#8682;</span> Import Config
+        </a>
+    </nav>
+
+    <div class="main">
+        <div class="topbar">
+            <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+            <div class="meta">Continent 4 Monitoring Dashboard</div>
+        </div>
+        <div class="content">
+            {% if messages %}
+            <div class="messages">
+                {% for msg in messages %}
+                <div class="msg msg-{{ msg.tags }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.datatable').DataTable({
+                pageLength: 25,
+                order: [],
+                language: { search: "Filter:" }
+            });
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

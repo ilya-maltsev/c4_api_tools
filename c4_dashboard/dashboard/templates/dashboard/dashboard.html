@@ -1,0 +1,116 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Dashboard - Continent 4{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="cards">
+    <div class="card">
+        <div class="card-label">Gateway</div>
+        <div class="card-value">{{ gateway.name|default:"N/A" }}</div>
+        <div class="card-sub">HW: {{ gateway.hwserial|default:"-" }} | {{ gateway.platform_version|default:"-" }}</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Domain</div>
+        <div class="card-value">{{ domain.name|default:"N/A" }}</div>
+        <div class="card-sub">Status: {{ domain.status|default:"-" }}</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Firewall Rules</div>
+        <div class="card-value">{{ rules_count }}</div>
+        <div class="card-sub">Active policy rules</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Services</div>
+        <div class="card-value">{{ enabled_services }} / {{ total_services }}</div>
+        <div class="card-sub">Enabled / Total</div>
+    </div>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <div class="card-label">DDoS Protection</div>
+        {% if ddos %}
+        <div class="card-value">
+            {% if ddos.mode == "off" %}
+            <span class="badge badge-off">OFF</span>
+            {% else %}
+            <span class="badge badge-on">{{ ddos.mode|upper }}</span>
+            {% endif %}
+        </div>
+        <div class="card-sub">Action: {{ ddos.action|default:"-" }}</div>
+        {% else %}
+        <div class="card-value">-</div>
+        {% endif %}
+    </div>
+    <div class="card">
+        <div class="card-label">VPN</div>
+        {% for vpn in vpns %}
+        <div style="margin-bottom:6px">
+            <span class="badge {% if vpn.is_enabled %}badge-on{% else %}badge-off{% endif %}">
+                {{ vpn.vpn_type }} {% if vpn.is_enabled %}ON{% else %}OFF{% endif %}
+            </span>
+        </div>
+        {% empty %}
+        <div class="card-value">-</div>
+        {% endfor %}
+    </div>
+    <div class="card">
+        <div class="card-label">Certificates</div>
+        <div class="card-value">{{ certs.count }}</div>
+        <div class="card-sub">Installed certificates</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Last Import</div>
+        {% if last_import %}
+        <div class="card-value" style="font-size:16px">{{ last_import.imported_at|date:"Y-m-d H:i" }}</div>
+        <div class="card-sub">{{ last_import.objects_count }} objects</div>
+        {% else %}
+        <div class="card-value">-</div>
+        <div class="card-sub">No data imported yet</div>
+        {% endif %}
+    </div>
+</div>
+
+{% if interfaces %}
+<div class="panel">
+    <div class="panel-header">Network Interfaces</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Name</th><th>Status</th><th>Addresses</th><th>MTU</th><th>Usage</th></tr></thead>
+            <tbody>
+            {% for iface in interfaces %}
+            <tr>
+                <td><strong>{{ iface.name }}</strong></td>
+                <td><span class="badge {% if iface.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if iface.is_enabled %}UP{% else %}DOWN{% endif %}</span></td>
+                <td>{{ iface.address_display }}</td>
+                <td>{{ iface.mtu }}</td>
+                <td>{{ iface.usage }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if certs %}
+<div class="panel">
+    <div class="panel-header">Certificates</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Subject</th><th>Role</th><th>Issuer</th><th>GOST</th><th>Valid Until</th></tr></thead>
+            <tbody>
+            {% for cert in certs %}
+            <tr>
+                <td><strong>{{ cert.subject }}</strong></td>
+                <td><span class="badge badge-info">{{ cert.role }}</span></td>
+                <td>{{ cert.issuer }}</td>
+                <td>{{ cert.gosttype }}</td>
+                <td>{{ cert.enddate }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

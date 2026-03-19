@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Certificates - Continent 4{% endblock %}
+{% block page_title %}Certificates{% endblock %}
+{% block content %}
+<div class="table-wrap">
+    <table class="datatable">
+        <thead><tr><th>Subject</th><th>Role</th><th>Issuer</th><th>CA</th><th>GOST</th><th>Valid From</th><th>Valid Until</th></tr></thead>
+        <tbody>
+        {% for cert in certs %}
+        <tr>
+            <td><strong>{{ cert.subject }}</strong></td>
+            <td><span class="badge badge-info">{{ cert.role }}</span></td>
+            <td>{{ cert.issuer }}</td>
+            <td>{% if cert.is_ca %}<span class="badge badge-warn">CA</span>{% else %}-{% endif %}</td>
+            <td>{{ cert.gosttype }}</td>
+            <td>{{ cert.startdate }}</td>
+            <td>{{ cert.enddate }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
