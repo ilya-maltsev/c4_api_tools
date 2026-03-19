@@ -1,0 +1,17 @@
+services:
+  c4-dashboard:
+    build:
+      context: ../../
+      dockerfile: dev_env/dev-c4-dashboard/Dockerfile
+    container_name: dev-c4-dashboard
+    network_mode: host
+    environment:
+      DB_HOST: "127.0.0.1"
+      DB_PORT: "5432"
+      DB_NAME: "monitoring"
+      DB_USER: "monitoring"
+      DB_PASSWORD: "monitoring"
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "*"
+    volumes:
+      - ../../c4_dashboard:/opt/app
