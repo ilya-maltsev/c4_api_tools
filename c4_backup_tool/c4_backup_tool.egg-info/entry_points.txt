@@ -1,0 +1,2 @@
+[console_scripts]
+c4_backup_tool = c4_backup_tool.__main__:cli
