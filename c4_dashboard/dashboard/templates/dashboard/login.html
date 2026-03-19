@@ -7,18 +7,21 @@
     <title>{% trans "Login" %} - {% trans "Continent 4 Dashboard" %}</title>
     <link rel="stylesheet" href="{% static 'dashboard/style.css' %}">
     <style>
-        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #1e2a38; }
-        .login-box { background: #fff; border-radius: 8px; padding: 36px; width: 360px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .login-box h1 { font-size: 20px; color: #1e2a38; margin-bottom: 6px; }
-        .login-box .sub { font-size: 13px; color: #7f8c8d; margin-bottom: 24px; }
-        .login-box label { display: block; font-size: 13px; color: #6c757d; margin-bottom: 4px; }
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #152343; }
+        .login-box { background: #fff; border-radius: 3px; padding: 32px; width: 380px; box-shadow: 0 6px 12px rgba(0,0,0,0.25); }
+        .login-box h1 { font-size: 18px; color: var(--fi-text); margin-bottom: 4px; }
+        .login-box .sub { font-size: 12px; color: var(--fi-text-muted); margin-bottom: 24px; }
+        .login-box label { display: block; font-size: 13px; color: var(--fi-text-muted); margin-bottom: 4px; font-weight: 700; }
         .login-box input[type="text"],
-        .login-box input[type="password"] { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 16px; box-sizing: border-box; }
-        .login-box input:focus { border-color: #3498db; outline: none; }
-        .login-box .btn { width: 100%; padding: 10px; font-size: 14px; }
-        .login-box .error { background: #f8d7da; color: #721c24; padding: 8px 12px; border-radius: 4px; font-size: 13px; margin-bottom: 16px; }
-        .login-brand { text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 700; color: #1e2a38; }
-        .login-brand span { color: #3498db; }
+        .login-box input[type="password"] { width: 100%; padding: 8px 12px; border: 1px solid var(--fi-border); border-radius: 3px; font-size: 14px; margin-bottom: 14px; box-sizing: border-box; font-family: inherit; }
+        .login-box input:focus { border-color: var(--fi-primary); outline: none; box-shadow: 0 0 4px rgba(36,112,188,0.3); }
+        .login-box .btn { width: 100%; padding: 9px; font-size: 14px; margin-top: 4px; }
+        .login-box .error { background: #f8d7da; color: #721c24; padding: 8px 12px; border-radius: 3px; font-size: 13px; margin-bottom: 14px; border: 1px solid #f5c6cb; }
+        .login-brand { text-align: center; margin-bottom: 20px; font-size: 17px; font-weight: 700; color: var(--fi-text); }
+        .login-brand span { color: var(--fi-primary); }
+        .lang-row { margin-top: 18px; text-align: center; padding-top: 14px; border-top: 1px solid #eee; }
+        .lang-row button { background: transparent; border: 1px solid var(--fi-border); color: var(--fi-text-muted); padding: 3px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: 700; margin: 0 2px; }
+        .lang-row button.active { background: var(--fi-primary); border-color: var(--fi-primary); color: #fff; }
     </style>
 </head>
 <body>
@@ -37,7 +40,7 @@
             <input type="password" name="password" required>
             <button type="submit" class="btn btn-primary">{% trans "Sign In" %}</button>
         </form>
-        <div style="margin-top:20px;text-align:center">
+        <div class="lang-row">
             {% get_current_language as CURRENT_LANGUAGE %}
             <form action="{% url 'set_language' %}" method="post" style="display:inline">
                 {% csrf_token %}
@@ -45,7 +48,7 @@
                 {% get_available_languages as LANGUAGES %}
                 {% for lang_code, lang_name in LANGUAGES %}
                 <button type="submit" name="language" value="{{ lang_code }}"
-                    style="background:{% if lang_code == CURRENT_LANGUAGE %}#3498db{% else %}transparent{% endif %};color:{% if lang_code == CURRENT_LANGUAGE %}#fff{% else %}#7f8c8d{% endif %};border:1px solid #ddd;padding:4px 12px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600">
+                    class="{% if lang_code == CURRENT_LANGUAGE %}active{% endif %}">
                     {{ lang_code|upper }}
                 </button>
                 {% endfor %}

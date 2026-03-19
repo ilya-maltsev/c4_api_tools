@@ -14,15 +14,15 @@
 
         <div class="sidebar-section">{% trans "Monitor" %}</div>
         <a href="{% url 'dashboard' %}" class="{% if page == 'dashboard' %}active{% endif %}">
-            <span class="icon">&#9632;</span> {% trans "Dashboard" %}
+            <span class="icon">&#9679;</span> {% trans "Dashboard" %}
         </a>
 
         <div class="sidebar-section">{% trans "Network" %}</div>
         <a href="{% url 'interfaces' %}" class="{% if page == 'interfaces' %}active{% endif %}">
-            <span class="icon">&#9700;</span> {% trans "Interfaces" %}
+            <span class="icon">&#8865;</span> {% trans "Interfaces" %}
         </a>
         <a href="{% url 'routes' %}" class="{% if page == 'routes' %}active{% endif %}">
-            <span class="icon">&#8644;</span> {% trans "Static Routes" %}
+            <span class="icon">&#10132;</span> {% trans "Static Routes" %}
         </a>
         <a href="{% url 'services' %}" class="{% if page == 'services' %}active{% endif %}">
             <span class="icon">&#9881;</span> {% trans "Services" %}
@@ -30,7 +30,7 @@
 
         <div class="sidebar-section">{% trans "Policy & Objects" %}</div>
         <a href="{% url 'firewall_rules' %}" class="{% if page == 'firewall_rules' %}active{% endif %}">
-            <span class="icon">&#9211;</span> {% trans "Firewall Rules" %}
+            <span class="icon">&#9730;</span> {% trans "Firewall Rules" %}
         </a>
         <a href="{% url 'app_exceptions' %}" class="{% if page == 'app_exceptions' %}active{% endif %}">
             <span class="icon">&#9776;</span> {% trans "App Exceptions" %}
@@ -41,23 +41,23 @@
             <span class="icon">&#9888;</span> {% trans "DDoS Protection" %}
         </a>
         <a href="{% url 'certificates' %}" class="{% if page == 'certificates' %}active{% endif %}">
-            <span class="icon">&#9919;</span> {% trans "Certificates" %}
+            <span class="icon">&#9871;</span> {% trans "Certificates" %}
         </a>
 
         <div class="sidebar-section">VPN</div>
         <a href="{% url 'vpn' %}" class="{% if page == 'vpn' %}active{% endif %}">
-            <span class="icon">&#8660;</span> VPN
+            <span class="icon">&#8644;</span> VPN
         </a>
 
         <div class="sidebar-section">{% trans "System" %}</div>
         <a href="{% url 'admins' %}" class="{% if page == 'admins' %}active{% endif %}">
-            <span class="icon">&#9786;</span> {% trans "Administrators" %}
+            <span class="icon">&#9733;</span> {% trans "Administrators" %}
         </a>
         <a href="{% url 'password_policy' %}" class="{% if page == 'password_policy' %}active{% endif %}">
-            <span class="icon">&#9919;</span> {% trans "Password Policy" %}
+            <span class="icon">&#9878;</span> {% trans "Password Policy" %}
         </a>
         <a href="{% url 'import_config' %}" class="{% if page == 'import_config' %}active{% endif %}">
-            <span class="icon">&#8682;</span> {% trans "Import Config" %}
+            <span class="icon">&#10515;</span> {% trans "Import Config" %}
         </a>
 
         <div class="sidebar-section">{% trans "Language" %}</div>
@@ -76,10 +76,12 @@
             </form>
         </div>
 
-        <div class="sidebar-section"></div>
-        <a href="{% url 'logout' %}" style="color:#e74c3c">
-            <span class="icon">&#10140;</span> {% trans "Logout" %} ({{ request.user.username }})
-        </a>
+        <div style="flex:1"></div>
+        <div style="border-top:1px solid var(--fi-border);padding:8px 16px">
+            <a href="{% url 'logout' %}" style="color:var(--fi-error);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:6px">
+                <span>&#10140;</span> {% trans "Logout" %} ({{ request.user.username }})
+            </a>
+        </div>
     </nav>
 
     <div class="main">

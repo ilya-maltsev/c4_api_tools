@@ -3,19 +3,19 @@
 {% block title %}{% trans "Firewall Rules" %} - {% trans "Continent 4" %}{% endblock %}
 {% block page_title %}{% trans "Firewall Rules" %}{% endblock %}
 {% block content %}
-<div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <label style="font-size:13px;color:#6c757d">{% trans "Counter interval" %}:</label>
-    <select id="counter-interval" style="border:1px solid #ddd;border-radius:4px;padding:5px 10px;font-size:13px">
+<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span class="toolbar-label">{% trans "Counter interval" %}:</span>
+    <select id="counter-interval" class="toolbar-select">
         <option value="5m">{% trans "5 minutes" %}</option>
         <option value="1h" selected>{% trans "1 hour" %}</option>
         <option value="1d">{% trans "1 day" %}</option>
         <option value="1w">{% trans "1 week" %}</option>
     </select>
-    <button id="counter-refresh" class="btn btn-primary" style="padding:5px 14px">{% trans "Refresh" %}</button>
-    <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer">
-        <input type="checkbox" id="counter-auto"> {% trans "Auto-update" %}
+    <button id="counter-refresh" class="btn btn-primary" style="padding:3px 12px;font-size:12px">{% trans "Refresh" %}</button>
+    <label class="toolbar-label" style="display:flex;align-items:center;gap:3px;cursor:pointer">
+        <input type="checkbox" id="counter-auto" class="toolbar-checkbox"> {% trans "Auto-update" %}
     </label>
-    <select id="auto-interval" style="border:1px solid #ddd;border-radius:4px;padding:5px 10px;font-size:13px">
+    <select id="auto-interval" class="toolbar-select">
         <option value="60000">{% trans "every 1 min" %}</option>
         <option value="300000" selected>{% trans "every 5 min" %}</option>
     </select>

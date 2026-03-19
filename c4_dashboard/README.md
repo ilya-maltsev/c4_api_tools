@@ -1,16 +1,19 @@
 # C4 Dashboard
 
-Веб-панель администрирования для мониторинга узлов безопасности Континент 4. Построена на Django, использует DataTables для фильтрации данных, стиль интерфейса аналогичен FortiGate.
+Веб-панель конфигурации для узлов безопасности Континент 4. Построена на Django, стилизована под FortiGate/FortiManager, использует DataTables для фильтрации данных.
 
 ## Возможности
 
 - Обзорная панель: информация о шлюзе, интерфейсы, сертификаты, статус сервисов
 - Сеть: интерфейсы, статические маршруты, сетевые сервисы
-- Политики и объекты: правила межсетевого экрана, исключения приложений
-- Безопасность: правила защиты от DDoS, сертификаты
+- Политики и объекты: правила МЭ с онлайн-счетчиком срабатываний, исключения приложений
+- Безопасность: правила защиты от DDoS, сертификаты (ГОСТ)
 - VPN: конфигурация L3 IPsec и L2 VPN
 - Система: учетные записи администраторов, парольная политика
-- Импорт данных: загрузка JSON-файлов конфигурации или синхронизация напрямую из Континент 4 через API c4_config_exporter
+- Импорт данных: синхронизация с Континент 4 через API или загрузка JSON-файлов
+- Аутентификация: вход по логину/паролю (настраивается через переменные окружения)
+- Локализация: русский (по умолчанию) и английский, переключение в интерфейсе
+- Счетчик правил МЭ: онлайн-запрос к БД логов ЦУС с автообновлением (1 мин / 5 мин)
 
 ## Архитектура
 
@@ -20,6 +23,8 @@
 Браузер -----> nginx ------> Django (c4_dashboard) :8000
                                   |
                                   |--> PostgreSQL :5432 (хранение данных)
+                                  |
+                                  |--> PostgreSQL cus-logs (БД логов ЦУС, ids_log)
                                   |
                                   |--> nginx :8444 (ГОСТ mTLS)
                                           |
@@ -36,29 +41,34 @@
 
 ```
 c4_dashboard/
-├── config/              # Настройки Django, urls, wsgi
+├── config/                    # Настройки Django, urls, wsgi
 ├── dashboard/
-│   ├── models.py        # Шлюз, интерфейс, правила МЭ, сертификаты, VPN, DDoS и др.
-│   ├── views.py         # Представления для всех страниц + синхронизация с К4
-│   ├── urls.py          # Маршрутизация URL
-│   ├── importer.py      # Импортер JSON-конфигураций
-│   ├── admin.py         # Регистрация моделей в Django admin
+│   ├── models.py              # Шлюз, интерфейс, правила МЭ, сертификаты, VPN, DDoS и др.
+│   ├── views.py               # Представления + синхронизация с К4 + API счетчиков
+│   ├── urls.py                # Маршрутизация URL
+│   ├── importer.py            # Импортер JSON-конфигураций
+│   ├── admin.py               # Регистрация моделей в Django admin
+│   ├── management/commands/
+│   │   └── ensure_admin.py    # Создание/обновление админа из переменных окружения
 │   ├── templates/dashboard/
-│   │   ├── base.html    # Макет: темная боковая панель, DataTables
-│   │   ├── dashboard.html
-│   │   ├── interfaces.html
-│   │   ├── routes.html
-│   │   ├── services.html
-│   │   ├── firewall_rules.html
-│   │   ├── ddos.html
-│   │   ├── app_exceptions.html
-│   │   ├── vpn.html
-│   │   ├── certificates.html
-│   │   ├── admins.html
-│   │   ├── password_policy.html
-│   │   └── import.html
+│   │   ├── base.html          # Макет: боковая панель в стиле FortiGate, DataTables
+│   │   ├── login.html         # Страница входа
+│   │   ├── dashboard.html     # Обзорная панель
+│   │   ├── interfaces.html    # Сетевые интерфейсы
+│   │   ├── routes.html        # Статические маршруты
+│   │   ├── services.html      # Сетевые сервисы
+│   │   ├── firewall_rules.html # Правила МЭ со счетчиком
+│   │   ├── ddos.html          # Защита от DDoS
+│   │   ├── app_exceptions.html # Исключения приложений
+│   │   ├── vpn.html           # Конфигурация VPN
+│   │   ├── certificates.html  # Сертификаты
+│   │   ├── admins.html        # Администраторы
+│   │   ├── password_policy.html # Парольная политика
+│   │   └── import.html        # Импорт конфигурации
 │   └── static/dashboard/
-│       └── style.css
+│       └── style.css          # Стили в стиле FortiGate
+├── locale/
+│   └── ru/LC_MESSAGES/        # Русская локализация
 ├── requirements.txt
 └── manage.py
 ```
@@ -72,66 +82,7 @@ c4_dashboard/
 - Запущенный контейнер nginx с ГОСТ (`dev_env/dev-nginx-gost`)
 - Запущенный контейнер c4_config_exporter API (`dev_env/dev-c4-config-exporter`)
 
-## Быстрый старт
-
-### 1. Запуск PostgreSQL
-
-```bash
-cd dev_env/dev-postgresql
-docker compose up -d
-
-# Создание базы данных мониторинга (только при первом запуске)
-docker exec dev-postgresql psql -U postgres \
-  -c "CREATE USER monitoring WITH PASSWORD 'monitoring';" \
-  -c "CREATE DATABASE monitoring OWNER monitoring;" \
-  -c "GRANT ALL PRIVILEGES ON DATABASE monitoring TO monitoring;"
-```
-
-### 2. Запуск nginx с ГОСТ (генерация PKI)
-
-```bash
-cd dev_env/dev-nginx-gost
-docker compose build
-docker compose up -d
-```
-
-При первом запуске автоматически генерируются:
-- ГОСТ CA-сертификат и ключ
-- ГОСТ-сертификаты для nginx, dashboard и exporter (серверные + клиентские)
-- RSA CA-сертификат и RSA-сертификат для nginx (для обычных браузеров)
-
-Панель будет доступна по адресу `https://127.0.0.1:8443` (ГОСТ + RSA).
-
-### 3. Запуск c4_config_exporter API
-
-```bash
-cd dev_env/dev-c4-config-exporter
-docker compose up -d
-```
-
-API экспортера доступен через nginx по адресу `https://127.0.0.1:8444` (ГОСТ mTLS).
-
-### 4. Запуск панели управления
-
-```bash
-cd dev_env/dev-c4-dashboard
-docker compose build
-docker compose up -d
-```
-
-Миграции базы данных применяются автоматически при запуске контейнера.
-
-## Импорт данных
-
-### Через веб-интерфейс
-
-1. Откройте `https://127.0.0.1:8443/import/`
-2. Нажмите **Sync from C4** для загрузки конфигураций напрямую из Континент 4
-3. Или загрузите JSON-файл конфигурации, экспортированный через `c4_config_exporter`
-
-### Через главную панель
-
-Нажмите кнопку **Sync from Continent 4** на главной странице панели.
+Подробная инструкция по развертыванию — в [README.md](../README.md) корневого каталога.
 
 ## Переменные окружения
 
@@ -139,13 +90,20 @@ docker compose up -d
 
 | Переменная | По умолчанию | Описание |
 |---|---|---|
-| `DB_HOST` | `127.0.0.1` | Хост PostgreSQL |
+| `DB_HOST` | `127.0.0.1` | Хост PostgreSQL (данные панели) |
 | `DB_PORT` | `5432` | Порт PostgreSQL |
 | `DB_NAME` | `monitoring` | Имя базы данных |
 | `DB_USER` | `monitoring` | Пользователь БД |
 | `DB_PASSWORD` | `monitoring` | Пароль БД |
+| `DASHBOARD_ADMIN_USER` | `admin` | Логин администратора панели |
+| `DASHBOARD_ADMIN_PASSWORD` | `admin` | Пароль администратора панели |
+| `C4_MONITOR_DB_HOST` | - | Хост БД логов ЦУС (ids_log) |
+| `C4_MONITOR_DB_PORT` | `5432` | Порт БД логов ЦУС |
+| `C4_MONITOR_DB_NAME` | `cus-logs` | Имя БД логов ЦУС |
+| `C4_MONITOR_DB_USER` | `monitoring` | Пользователь БД логов |
+| `C4_MONITOR_DB_PASSWORD` | - | Пароль БД логов |
 | `C4_EXPORTER_API_URL` | `https://127.0.0.1:8444` | URL FastAPI c4_config_exporter |
-| `C4_CA_CERT` | `/etc/c4-certs/ca.crt` | CA-сертификат для проверки сервера |
+| `C4_CA_CERT` | `/etc/c4-certs/ca.crt` | CA-сертификат для mTLS |
 | `C4_CLIENT_CERT` | `/etc/c4-certs/dashboard.crt` | Клиентский сертификат для mTLS |
 | `C4_CLIENT_KEY` | `/etc/c4-certs/dashboard.key` | Закрытый ключ клиента |
 | `DJANGO_DEBUG` | `True` | Режим отладки Django |
@@ -159,10 +117,15 @@ docker compose up -d
 | `C4_HOST` | `192.168.122.200` | IP-адрес сервера Континент 4 |
 | `C4_PORT` | `444` | Порт сервера Континент 4 |
 | `C4_USER` | `admin` | Имя пользователя К4 |
-| `C4_PASSWORD` | `AsdfgTrewq1@` | Пароль К4 |
+| `C4_PASSWORD` | - | Пароль К4 |
+| `C4_CLIENT_CERT` | `/etc/c4-certs/exporter.crt` | Клиентский сертификат для mTLS |
+| `C4_CLIENT_KEY` | `/etc/c4-certs/exporter.key` | Закрытый ключ клиента |
+| `C4_CA_CERT` | `/etc/c4-certs/ca.crt` | CA-сертификат |
 | `C4_API_PORT` | `8001` | Порт FastAPI-сервиса |
 
-## API-эндпоинты экспортера
+## API-эндпоинты
+
+### Экспортер (через nginx :8444, ГОСТ mTLS)
 
 | Метод | Эндпоинт | Описание |
 |---|---|---|
@@ -171,9 +134,15 @@ docker compose up -d
 | GET | `/api/configs` | Экспорт конфигураций всех УБ |
 | GET | `/api/config/{hwserial}` | Экспорт конфигурации конкретного УБ |
 
-## Модели данных
+### Панель (внутренние)
 
-Панель хранит следующие сущности, извлеченные из JSON-конфигурации К4:
+| Метод | Эндпоинт | Описание |
+|---|---|---|
+| GET | `/api/rule-counters/?interval=` | Счетчики срабатываний правил МЭ |
+
+Параметр `interval`: `5m`, `1h`, `1d`, `1w`
+
+## Модели данных
 
 - **Gateway** — узел безопасности (УБ): платформа, серийный номер
 - **Domain** — домен управления
