@@ -1,0 +1,56 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% trans "Login" %} - {% trans "Continent 4 Dashboard" %}</title>
+    <link rel="stylesheet" href="{% static 'dashboard/style.css' %}">
+    <style>
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #1e2a38; }
+        .login-box { background: #fff; border-radius: 8px; padding: 36px; width: 360px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .login-box h1 { font-size: 20px; color: #1e2a38; margin-bottom: 6px; }
+        .login-box .sub { font-size: 13px; color: #7f8c8d; margin-bottom: 24px; }
+        .login-box label { display: block; font-size: 13px; color: #6c757d; margin-bottom: 4px; }
+        .login-box input[type="text"],
+        .login-box input[type="password"] { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 16px; box-sizing: border-box; }
+        .login-box input:focus { border-color: #3498db; outline: none; }
+        .login-box .btn { width: 100%; padding: 10px; font-size: 14px; }
+        .login-box .error { background: #f8d7da; color: #721c24; padding: 8px 12px; border-radius: 4px; font-size: 13px; margin-bottom: 16px; }
+        .login-brand { text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 700; color: #1e2a38; }
+        .login-brand span { color: #3498db; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <div class="login-brand"><span>C4</span> Dashboard</div>
+        <h1>{% trans "Login" %}</h1>
+        <div class="sub">{% trans "Continent 4 Configuration Dashboard" %}</div>
+        {% if error %}
+        <div class="error">{% trans "Invalid username or password." %}</div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <label>{% trans "Username" %}</label>
+            <input type="text" name="username" autofocus required>
+            <label>{% trans "Password" %}</label>
+            <input type="password" name="password" required>
+            <button type="submit" class="btn btn-primary">{% trans "Sign In" %}</button>
+        </form>
+        <div style="margin-top:20px;text-align:center">
+            {% get_current_language as CURRENT_LANGUAGE %}
+            <form action="{% url 'set_language' %}" method="post" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                {% get_available_languages as LANGUAGES %}
+                {% for lang_code, lang_name in LANGUAGES %}
+                <button type="submit" name="language" value="{{ lang_code }}"
+                    style="background:{% if lang_code == CURRENT_LANGUAGE %}#3498db{% else %}transparent{% endif %};color:{% if lang_code == CURRENT_LANGUAGE %}#fff{% else %}#7f8c8d{% endif %};border:1px solid #ddd;padding:4px 12px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600">
+                    {{ lang_code|upper }}
+                </button>
+                {% endfor %}
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -39,4 +39,4 @@ COPY c4_dashboard /opt/app
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py compilemessages && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py compilemessages && python manage.py migrate --noinput && python manage.py ensure_admin && python manage.py runserver 0.0.0.0:8000"]

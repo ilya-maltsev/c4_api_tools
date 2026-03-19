@@ -6,6 +6,8 @@ import urllib.error
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
@@ -14,6 +16,27 @@ from .models import (
 from .importer import import_config_json
 
 
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    error = None
+    if request.method == 'POST':
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect(request.GET.get('next', 'dashboard'))
+        error = True
+    return render(request, 'dashboard/login.html', {'error': error})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+
+@login_required
 def dashboard_view(request):
     gateway = Gateway.objects.first()
     domain = Domain.objects.first()
@@ -43,6 +66,7 @@ def dashboard_view(request):
     })
 
 
+@login_required
 def interfaces_view(request):
     interfaces = NetworkInterface.objects.all()
     return render(request, 'dashboard/interfaces.html', {
@@ -51,6 +75,7 @@ def interfaces_view(request):
     })
 
 
+@login_required
 def routes_view(request):
     routes = StaticRoute.objects.all()
     return render(request, 'dashboard/routes.html', {
@@ -59,6 +84,7 @@ def routes_view(request):
     })
 
 
+@login_required
 def services_view(request):
     services = ServiceComponent.objects.all()
     return render(request, 'dashboard/services.html', {
@@ -67,6 +93,7 @@ def services_view(request):
     })
 
 
+@login_required
 def firewall_rules_view(request):
     rules = FirewallRule.objects.all()
     return render(request, 'dashboard/firewall_rules.html', {
@@ -75,6 +102,7 @@ def firewall_rules_view(request):
     })
 
 
+@login_required
 def ddos_view(request):
     ddos = DDoSProtection.objects.first()
     ddos_rules = DDoSRule.objects.all()
@@ -85,6 +113,7 @@ def ddos_view(request):
     })
 
 
+@login_required
 def app_exceptions_view(request):
     exceptions = AppException.objects.all()
     return render(request, 'dashboard/app_exceptions.html', {
@@ -93,6 +122,7 @@ def app_exceptions_view(request):
     })
 
 
+@login_required
 def vpn_view(request):
     vpns = VPNConfig.objects.all()
     return render(request, 'dashboard/vpn.html', {
@@ -101,6 +131,7 @@ def vpn_view(request):
     })
 
 
+@login_required
 def certificates_view(request):
     certs = Certificate.objects.all()
     return render(request, 'dashboard/certificates.html', {
@@ -109,6 +140,7 @@ def certificates_view(request):
     })
 
 
+@login_required
 def admins_view(request):
     admins = AdminUser.objects.all()
     return render(request, 'dashboard/admins.html', {
@@ -117,6 +149,7 @@ def admins_view(request):
     })
 
 
+@login_required
 def password_policy_view(request):
     policy = PasswordPolicy.objects.first()
     return render(request, 'dashboard/password_policy.html', {
@@ -125,6 +158,7 @@ def password_policy_view(request):
     })
 
 
+@login_required
 def import_config_view(request):
     imports = ConfigImport.objects.all()[:20]
     if request.method == 'POST':
@@ -141,6 +175,7 @@ def import_config_view(request):
     })
 
 
+@login_required
 def sync_from_c4_view(request):
     if request.method != 'POST':
         return redirect('dashboard')

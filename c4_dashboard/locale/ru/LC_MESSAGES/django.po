@@ -13,8 +13,8 @@ msgstr "Английский"
 msgid "Continent 4 Dashboard"
 msgstr "Панель управления Континент 4"
 
-msgid "Continent 4 Monitoring Dashboard"
-msgstr "Панель мониторинга Континент 4"
+msgid "Continent 4 Configuration Dashboard"
+msgstr "Панель конфигурации Континент 4"
 
 msgid "Continent 4"
 msgstr "Континент 4"
@@ -227,7 +227,7 @@ msgid "No VPN configuration found."
 msgstr "Конфигурация VPN не найдена."
 
 msgid "Login"
-msgstr "Логин"
+msgstr "Вход"
 
 msgid "Full Name"
 msgstr "Полное имя"
@@ -330,3 +330,18 @@ msgstr "Файл"
 
 msgid "Objects"
 msgstr "Объекты"
+
+msgid "Username"
+msgstr "Имя пользователя"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "Sign In"
+msgstr "Войти"
+
+msgid "Invalid username or password."
+msgstr "Неверное имя пользователя или пароль."
+
+msgid "Logout"
+msgstr "Выход"

@@ -75,12 +75,17 @@
                 {% endfor %}
             </form>
         </div>
+
+        <div class="sidebar-section"></div>
+        <a href="{% url 'logout' %}" style="color:#e74c3c">
+            <span class="icon">&#10140;</span> {% trans "Logout" %} ({{ request.user.username }})
+        </a>
     </nav>
 
     <div class="main">
         <div class="topbar">
             <h1>{% block page_title %}{% trans "Dashboard" %}{% endblock %}</h1>
-            <div class="meta">{% trans "Continent 4 Monitoring Dashboard" %}</div>
+            <div class="meta">{% trans "Continent 4 Configuration Dashboard" %}</div>
         </div>
         <div class="content">
             {% if messages %}
