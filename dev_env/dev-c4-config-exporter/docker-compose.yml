@@ -14,3 +14,9 @@ services:
       C4_API_PORT: "8001"
     volumes:
       - ./output:/opt/output
+      - certs:/etc/c4-certs:ro
+
+volumes:
+  certs:
+    name: dev-c4-certs
+    external: true

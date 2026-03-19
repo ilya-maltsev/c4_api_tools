@@ -1,42 +1,50 @@
 # C4 Dashboard
 
-Web-based admin dashboard for monitoring Continent 4 security gateways. Built with Django, uses DataTables for data filtering, styled after FortiGate web UI.
+Веб-панель администрирования для мониторинга узлов безопасности Континент 4. Построена на Django, использует DataTables для фильтрации данных, стиль интерфейса аналогичен FortiGate.
 
-## Features
+## Возможности
 
-- Dashboard overview: gateway info, interfaces, certificates, services status
-- Network: interfaces, static routes, service components
-- Policy & Objects: firewall rules, application exceptions
-- Security: DDoS protection rules, certificates
-- VPN: L3 IPsec and L2 VPN configuration
-- System: administrator accounts, password policy
-- Data import: upload JSON config files or sync directly from Continent 4 via c4_config_exporter API
+- Обзорная панель: информация о шлюзе, интерфейсы, сертификаты, статус сервисов
+- Сеть: интерфейсы, статические маршруты, сетевые сервисы
+- Политики и объекты: правила межсетевого экрана, исключения приложений
+- Безопасность: правила защиты от DDoS, сертификаты
+- VPN: конфигурация L3 IPsec и L2 VPN
+- Система: учетные записи администраторов, парольная политика
+- Импорт данных: загрузка JSON-файлов конфигурации или синхронизация напрямую из Континент 4 через API c4_config_exporter
 
-## Architecture
+## Архитектура
 
 ```
-Browser :8000 --> Django (c4_dashboard)
-                      |
-                      |--> PostgreSQL :5432 (data storage)
-                      |
-                      |--> FastAPI :8001 (c4_config_exporter API)
-                                |
-                                |--> Continent 4 :444 (GOST TLS)
+                      nginx :8443 (ГОСТ + RSA TLS)
+                             |
+Браузер -----> nginx ------> Django (c4_dashboard) :8000
+                                  |
+                                  |--> PostgreSQL :5432 (хранение данных)
+                                  |
+                                  |--> nginx :8444 (ГОСТ mTLS)
+                                          |
+                                          |--> FastAPI :8001 (c4_config_exporter API)
+                                                    |
+                                                    |--> Континент 4 :444 (ГОСТ TLS)
 ```
 
-## Project Structure
+- Порт `:8443` — единый порт для доступа к панели, поддерживает одновременно ГОСТ и RSA шифры
+- Порт `:8444` — внутренний API экспортера, доступ только по ГОСТ mTLS с клиентским сертификатом
+- Все сертификаты (CA, серверные, клиентские) генерируются автоматически при первом запуске контейнера nginx
+
+## Структура проекта
 
 ```
 c4_dashboard/
-├── config/              # Django settings, urls, wsgi
+├── config/              # Настройки Django, urls, wsgi
 ├── dashboard/
-│   ├── models.py        # Gateway, Interface, FW Rule, Cert, VPN, DDoS, etc.
-│   ├── views.py         # Views for all dashboard pages + sync from C4
-│   ├── urls.py          # URL routing
-│   ├── importer.py      # JSON config importer
-│   ├── admin.py         # Django admin registrations
+│   ├── models.py        # Шлюз, интерфейс, правила МЭ, сертификаты, VPN, DDoS и др.
+│   ├── views.py         # Представления для всех страниц + синхронизация с К4
+│   ├── urls.py          # Маршрутизация URL
+│   ├── importer.py      # Импортер JSON-конфигураций
+│   ├── admin.py         # Регистрация моделей в Django admin
 │   ├── templates/dashboard/
-│   │   ├── base.html    # Layout: dark sidebar, DataTables
+│   │   ├── base.html    # Макет: темная боковая панель, DataTables
 │   │   ├── dashboard.html
 │   │   ├── interfaces.html
 │   │   ├── routes.html
@@ -55,39 +63,55 @@ c4_dashboard/
 └── manage.py
 ```
 
-## Prerequisites
+## Предварительные требования
 
-All services run in Docker containers. Required:
+Все сервисы запускаются в Docker-контейнерах. Необходимо:
 
-- Docker with Compose plugin
-- Running PostgreSQL container (`dev_env/dev-postgresql`)
-- Running c4_config_exporter API container (`dev_env/dev-c4-config-exporter`)
+- Docker с плагином Compose
+- Запущенный контейнер PostgreSQL (`dev_env/dev-postgresql`)
+- Запущенный контейнер nginx с ГОСТ (`dev_env/dev-nginx-gost`)
+- Запущенный контейнер c4_config_exporter API (`dev_env/dev-c4-config-exporter`)
 
-## Quick Start
+## Быстрый старт
 
-### 1. Start PostgreSQL
+### 1. Запуск PostgreSQL
 
 ```bash
 cd dev_env/dev-postgresql
 docker compose up -d
 
-# Create the monitoring database (first run only)
+# Создание базы данных мониторинга (только при первом запуске)
 docker exec dev-postgresql psql -U postgres \
   -c "CREATE USER monitoring WITH PASSWORD 'monitoring';" \
   -c "CREATE DATABASE monitoring OWNER monitoring;" \
   -c "GRANT ALL PRIVILEGES ON DATABASE monitoring TO monitoring;"
 ```
 
-### 2. Start c4_config_exporter API
+### 2. Запуск nginx с ГОСТ (генерация PKI)
+
+```bash
+cd dev_env/dev-nginx-gost
+docker compose build
+docker compose up -d
+```
+
+При первом запуске автоматически генерируются:
+- ГОСТ CA-сертификат и ключ
+- ГОСТ-сертификаты для nginx, dashboard и exporter (серверные + клиентские)
+- RSA CA-сертификат и RSA-сертификат для nginx (для обычных браузеров)
+
+Панель будет доступна по адресу `https://127.0.0.1:8443` (ГОСТ + RSA).
+
+### 3. Запуск c4_config_exporter API
 
 ```bash
 cd dev_env/dev-c4-config-exporter
 docker compose up -d
 ```
 
-The exporter API will be available at `http://127.0.0.1:8001`.
+API экспортера доступен через nginx по адресу `https://127.0.0.1:8444` (ГОСТ mTLS).
 
-### 3. Start the Dashboard
+### 4. Запуск панели управления
 
 ```bash
 cd dev_env/dev-c4-dashboard
@@ -95,72 +119,73 @@ docker compose build
 docker compose up -d
 ```
 
-The dashboard will be available at `http://127.0.0.1:8000`.
+Миграции базы данных применяются автоматически при запуске контейнера.
 
-Migrations are applied automatically on container start.
+## Импорт данных
 
-## Importing Data
+### Через веб-интерфейс
 
-### Via Web UI
+1. Откройте `https://127.0.0.1:8443/import/`
+2. Нажмите **Sync from C4** для загрузки конфигураций напрямую из Континент 4
+3. Или загрузите JSON-файл конфигурации, экспортированный через `c4_config_exporter`
 
-1. Open `http://127.0.0.1:8000/import/`
-2. Click **Sync from C4** to pull configs directly from Continent 4
-3. Or upload a JSON config file exported by `c4_config_exporter`
+### Через главную панель
 
-### Via Dashboard
+Нажмите кнопку **Sync from Continent 4** на главной странице панели.
 
-Click the **Sync from Continent 4** button on the main dashboard page.
+## Переменные окружения
 
-## Environment Variables
+### Панель управления (`dev-c4-dashboard`)
 
-### Dashboard (`dev-c4-dashboard`)
-
-| Variable | Default | Description |
+| Переменная | По умолчанию | Описание |
 |---|---|---|
-| `DB_HOST` | `127.0.0.1` | PostgreSQL host |
-| `DB_PORT` | `5432` | PostgreSQL port |
-| `DB_NAME` | `monitoring` | Database name |
-| `DB_USER` | `monitoring` | Database user |
-| `DB_PASSWORD` | `monitoring` | Database password |
-| `C4_EXPORTER_API_URL` | `http://127.0.0.1:8001` | c4_config_exporter FastAPI URL |
-| `DJANGO_DEBUG` | `True` | Django debug mode |
-| `DJANGO_ALLOWED_HOSTS` | `*` | Allowed hosts |
-| `CSRF_TRUSTED_ORIGINS` | `http://127.0.0.1:8000,...` | Trusted origins for CSRF |
+| `DB_HOST` | `127.0.0.1` | Хост PostgreSQL |
+| `DB_PORT` | `5432` | Порт PostgreSQL |
+| `DB_NAME` | `monitoring` | Имя базы данных |
+| `DB_USER` | `monitoring` | Пользователь БД |
+| `DB_PASSWORD` | `monitoring` | Пароль БД |
+| `C4_EXPORTER_API_URL` | `https://127.0.0.1:8444` | URL FastAPI c4_config_exporter |
+| `C4_CA_CERT` | `/etc/c4-certs/ca.crt` | CA-сертификат для проверки сервера |
+| `C4_CLIENT_CERT` | `/etc/c4-certs/dashboard.crt` | Клиентский сертификат для mTLS |
+| `C4_CLIENT_KEY` | `/etc/c4-certs/dashboard.key` | Закрытый ключ клиента |
+| `DJANGO_DEBUG` | `True` | Режим отладки Django |
+| `DJANGO_ALLOWED_HOSTS` | `*` | Разрешенные хосты |
+| `CSRF_TRUSTED_ORIGINS` | `https://127.0.0.1:8443,...` | Доверенные источники для CSRF |
 
-### Exporter API (`dev-c4-config-exporter`)
+### API экспортера (`dev-c4-config-exporter`)
 
-| Variable | Default | Description |
+| Переменная | По умолчанию | Описание |
 |---|---|---|
-| `C4_HOST` | `192.168.122.200` | Continent 4 server IP |
-| `C4_PORT` | `444` | Continent 4 server port |
-| `C4_USER` | `admin` | C4 username |
-| `C4_PASSWORD` | `AsdfgTrewq1@` | C4 password |
-| `C4_API_PORT` | `8001` | FastAPI listen port |
+| `C4_HOST` | `192.168.122.200` | IP-адрес сервера Континент 4 |
+| `C4_PORT` | `444` | Порт сервера Континент 4 |
+| `C4_USER` | `admin` | Имя пользователя К4 |
+| `C4_PASSWORD` | `AsdfgTrewq1@` | Пароль К4 |
+| `C4_API_PORT` | `8001` | Порт FastAPI-сервиса |
 
-## Exporter API Endpoints
+## API-эндпоинты экспортера
 
-| Method | Endpoint | Description |
+| Метод | Эндпоинт | Описание |
 |---|---|---|
-| GET | `/api/health` | Health check |
-| GET | `/api/gateways` | List all gateways from C4 |
-| GET | `/api/configs` | Export all gateway configurations |
-| GET | `/api/config/{hwserial}` | Export configuration for a specific gateway |
+| GET | `/api/health` | Проверка доступности сервиса |
+| GET | `/api/gateways` | Список всех УБ из К4 |
+| GET | `/api/configs` | Экспорт конфигураций всех УБ |
+| GET | `/api/config/{hwserial}` | Экспорт конфигурации конкретного УБ |
 
-## Data Models
+## Модели данных
 
-The dashboard stores the following entities parsed from C4 configuration JSON:
+Панель хранит следующие сущности, извлеченные из JSON-конфигурации К4:
 
-- **Gateway** — security gateway (CGW) info, platform, serial
-- **Domain** — management domain
-- **NetworkInterface** — ethernet interfaces with addresses
-- **StaticRoute** — routing table entries
-- **FirewallRule** — firewall policy rules
-- **Certificate** — X.509 certificates (GOST)
-- **AdminUser** — administrator accounts
-- **VPNConfig** — L3 IPsec and L2 VPN settings
-- **DDoSProtection** — DDoS protection mode and action
-- **DDoSRule** — individual attack type detection rules (16 types)
-- **AppException** — application whitelist exceptions
-- **PasswordPolicy** — password complexity and expiration policy
-- **ServiceComponent** — network services (SNMP, NTP, DNS, LLDP, etc.)
-- **ConfigImport** — import history tracking
+- **Gateway** — узел безопасности (УБ): платформа, серийный номер
+- **Domain** — домен управления
+- **NetworkInterface** — сетевые интерфейсы с адресами
+- **StaticRoute** — записи таблицы маршрутизации
+- **FirewallRule** — правила межсетевого экрана
+- **Certificate** — сертификаты X.509 (ГОСТ)
+- **AdminUser** — учетные записи администраторов
+- **VPNConfig** — настройки L3 IPsec и L2 VPN
+- **DDoSProtection** — режим и действие защиты от DDoS
+- **DDoSRule** — правила обнаружения отдельных типов атак (16 типов)
+- **AppException** — исключения белого списка приложений
+- **PasswordPolicy** — политика сложности и срока действия паролей
+- **ServiceComponent** — сетевые сервисы (SNMP, NTP, DNS, LLDP и др.)
+- **ConfigImport** — история импортов конфигураций

@@ -74,5 +74,8 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 C4_EXPORTER_API_URL = os.environ.get('C4_EXPORTER_API_URL', 'http://127.0.0.1:8001')
+C4_CA_CERT = os.environ.get('C4_CA_CERT', '')
+C4_CLIENT_CERT = os.environ.get('C4_CLIENT_CERT', '')
+C4_CLIENT_KEY = os.environ.get('C4_CLIENT_KEY', '')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

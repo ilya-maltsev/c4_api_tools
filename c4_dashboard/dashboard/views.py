@@ -1,5 +1,6 @@
 import json
 import os
+import ssl
 import urllib.request
 import urllib.error
 from django.shortcuts import render, redirect
@@ -147,8 +148,21 @@ def sync_from_c4_view(request):
     api_url = settings.C4_EXPORTER_API_URL.rstrip('/')
 
     try:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ctx.set_ciphers("ALL:@SECLEVEL=0")
+        ca_cert = getattr(settings, 'C4_CA_CERT', '')
+        client_cert = getattr(settings, 'C4_CLIENT_CERT', '')
+        client_key = getattr(settings, 'C4_CLIENT_KEY', '')
+        if ca_cert and os.path.exists(ca_cert):
+            ctx.load_verify_locations(ca_cert)
+        else:
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+        if client_cert and os.path.exists(client_cert):
+            ctx.load_cert_chain(client_cert, client_key)
+
         req = urllib.request.Request(f"{api_url}/api/configs", method='GET')
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=60, context=ctx) as resp:
             data = json.loads(resp.read().decode('utf-8'))
     except urllib.error.URLError as e:
         messages.error(request, f"Cannot reach C4 Exporter API: {e}")

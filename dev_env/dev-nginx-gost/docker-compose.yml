@@ -1,0 +1,14 @@
+services:
+  nginx-gost:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dev-nginx-gost
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - certs:/etc/nginx/certs
+
+volumes:
+  certs:
+    name: dev-c4-certs

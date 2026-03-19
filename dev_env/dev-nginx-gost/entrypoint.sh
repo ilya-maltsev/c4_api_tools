@@ -1,0 +1,88 @@
+#!/bin/bash
+set -e
+
+CERT_DIR="/etc/nginx/certs"
+DAYS=${CERT_DAYS:-365}
+
+generate_gost_ca() {
+    echo "[PKI] Generating GOST CA..."
+    openssl req -x509 \
+        -newkey gost2012_256 -pkeyopt paramset:A \
+        -nodes -keyout "${CERT_DIR}/ca.key" -out "${CERT_DIR}/ca.crt" \
+        -days ${DAYS} -subj "/C=RU/O=C4 Dev/CN=C4 GOST CA"
+    chmod 600 "${CERT_DIR}/ca.key"
+}
+
+generate_rsa_ca() {
+    echo "[PKI] Generating RSA CA..."
+    openssl req -x509 -newkey rsa:2048 \
+        -nodes -keyout "${CERT_DIR}/ca-rsa.key" -out "${CERT_DIR}/ca-rsa.crt" \
+        -days ${DAYS} -subj "/C=RU/O=C4 Dev/CN=C4 RSA CA"
+    chmod 600 "${CERT_DIR}/ca-rsa.key"
+}
+
+generate_cert() {
+    local algo=$1  # gost or rsa
+    local name=$2
+    local cn=$3
+    local san=$4
+    local key="${CERT_DIR}/${name}.key"
+    local csr="${CERT_DIR}/${name}.csr"
+    local cert="${CERT_DIR}/${name}.crt"
+
+    if [ "$algo" = "gost" ]; then
+        local ca_cert="${CERT_DIR}/ca.crt"
+        local ca_key="${CERT_DIR}/ca.key"
+        echo "[PKI] GOST cert: ${cn} -> ${name}"
+        openssl req -new \
+            -newkey gost2012_256 -pkeyopt paramset:A \
+            -nodes -keyout "${key}" -out "${csr}" \
+            -subj "/C=RU/O=C4 Dev/CN=${cn}"
+    else
+        local ca_cert="${CERT_DIR}/ca-rsa.crt"
+        local ca_key="${CERT_DIR}/ca-rsa.key"
+        echo "[PKI] RSA  cert: ${cn} -> ${name}"
+        openssl req -new -newkey rsa:2048 \
+            -nodes -keyout "${key}" -out "${csr}" \
+            -subj "/C=RU/O=C4 Dev/CN=${cn}"
+    fi
+
+    local ext="${CERT_DIR}/${name}.ext"
+    cat > "${ext}" <<EOF
+basicConstraints=CA:FALSE
+keyUsage=digitalSignature,keyEncipherment
+extendedKeyUsage=serverAuth,clientAuth
+subjectAltName=${san}
+EOF
+
+    openssl x509 -req -in "${csr}" \
+        -CA "${ca_cert}" -CAkey "${ca_key}" -CAcreateserial \
+        -out "${cert}" -days ${DAYS} -extfile "${ext}"
+
+    chmod 600 "${key}"
+    rm -f "${csr}" "${ext}"
+}
+
+mkdir -p "${CERT_DIR}"
+
+if [ ! -f "${CERT_DIR}/ca.crt" ]; then
+    echo "[PKI] Generating full PKI..."
+
+    # GOST CA + certs (internal mTLS + GOST frontend)
+    generate_gost_ca
+    generate_cert gost "nginx"     "c4-nginx"     "DNS:localhost,IP:127.0.0.1"
+    generate_cert gost "dashboard" "c4-dashboard"  "DNS:localhost,IP:127.0.0.1"
+    generate_cert gost "exporter"  "c4-exporter"   "DNS:localhost,IP:127.0.0.1"
+
+    # RSA CA + cert (RSA frontend)
+    generate_rsa_ca
+    generate_cert rsa "nginx-rsa" "c4-nginx-rsa" "DNS:localhost,IP:127.0.0.1"
+
+    echo "[PKI] Done."
+    ls -la "${CERT_DIR}"
+else
+    echo "[PKI] CA found, skipping generation."
+fi
+
+echo "[NGINX] Starting nginx..."
+exec nginx -g "daemon off;"
