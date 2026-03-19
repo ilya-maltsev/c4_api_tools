@@ -3,11 +3,13 @@ import os
 import ssl
 import urllib.request
 import urllib.error
+import psycopg2
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
@@ -222,3 +224,53 @@ def sync_from_c4_view(request):
 
     messages.success(request, f"Synced {len(gateways)} gateway(s): {', '.join(names)} ({total} objects)")
     return redirect(request.POST.get('next', 'dashboard'))
+
+
+INTERVAL_MAP = {
+    '5m': "NOW() - INTERVAL '5 minutes'",
+    '1h': "NOW() - INTERVAL '1 hour'",
+    '1d': "NOW() - INTERVAL '1 day'",
+    '1w': "NOW() - INTERVAL '7 days'",
+}
+
+
+@login_required
+def rule_counters_api(request):
+    interval = request.GET.get('interval', '1h')
+    if interval not in INTERVAL_MAP:
+        return JsonResponse({'error': 'invalid interval'}, status=400)
+
+    db_host = settings.C4_MONITOR_DB_HOST
+    if not db_host:
+        return JsonResponse({'error': 'C4_MONITOR_DB_HOST not configured'}, status=503)
+
+    try:
+        conn = psycopg2.connect(
+            host=db_host,
+            port=settings.C4_MONITOR_DB_PORT,
+            dbname=settings.C4_MONITOR_DB_NAME,
+            user=settings.C4_MONITOR_DB_USER,
+            password=settings.C4_MONITOR_DB_PASSWORD,
+            connect_timeout=5,
+        )
+        cur = conn.cursor()
+        cur.execute(f"""
+            SELECT signature_id, rule_name, COUNT(*) as cnt
+            FROM ids_log
+            WHERE event_type = 'firewall'
+              AND "timestamp" > {INTERVAL_MAP[interval]}
+            GROUP BY signature_id, rule_name
+            ORDER BY cnt DESC
+        """)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        counters = {}
+        for sig_id, rule_name, cnt in rows:
+            key = rule_name or str(sig_id)
+            counters[key] = counters.get(key, 0) + cnt
+
+        return JsonResponse({'interval': interval, 'counters': counters})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)

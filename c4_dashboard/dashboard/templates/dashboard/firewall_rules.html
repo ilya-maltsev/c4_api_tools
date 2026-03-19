@@ -3,9 +3,38 @@
 {% block title %}{% trans "Firewall Rules" %} - {% trans "Continent 4" %}{% endblock %}
 {% block page_title %}{% trans "Firewall Rules" %}{% endblock %}
 {% block content %}
+<div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <label style="font-size:13px;color:#6c757d">{% trans "Counter interval" %}:</label>
+    <select id="counter-interval" style="border:1px solid #ddd;border-radius:4px;padding:5px 10px;font-size:13px">
+        <option value="5m">{% trans "5 minutes" %}</option>
+        <option value="1h" selected>{% trans "1 hour" %}</option>
+        <option value="1d">{% trans "1 day" %}</option>
+        <option value="1w">{% trans "1 week" %}</option>
+    </select>
+    <button id="counter-refresh" class="btn btn-primary" style="padding:5px 14px">{% trans "Refresh" %}</button>
+    <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer">
+        <input type="checkbox" id="counter-auto"> {% trans "Auto-update" %}
+    </label>
+    <select id="auto-interval" style="border:1px solid #ddd;border-radius:4px;padding:5px 10px;font-size:13px">
+        <option value="60000">{% trans "every 1 min" %}</option>
+        <option value="300000" selected>{% trans "every 5 min" %}</option>
+    </select>
+    <span id="counter-status" style="font-size:12px;color:#95a5a6"></span>
+</div>
+
 <div class="table-wrap">
-    <table class="datatable">
-        <thead><tr><th>#</th><th>{% trans "Name" %}</th><th>{% trans "Status" %}</th><th>{% trans "Action" %}</th><th>{% trans "Logging" %}</th><th>{% trans "Src Inv." %}</th><th>{% trans "Dst Inv." %}</th><th>{% trans "Priority" %}</th></tr></thead>
+    <table class="datatable" id="fw-table">
+        <thead><tr>
+            <th>#</th>
+            <th>{% trans "Name" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th>{% trans "Action" %}</th>
+            <th>{% trans "Counter" %}</th>
+            <th>{% trans "Logging" %}</th>
+            <th>{% trans "Src Inv." %}</th>
+            <th>{% trans "Dst Inv." %}</th>
+            <th>{% trans "Priority" %}</th>
+        </tr></thead>
         <tbody>
         {% for rule in rules %}
         <tr>
@@ -13,6 +42,7 @@
             <td><strong>{{ rule.name }}</strong></td>
             <td><span class="badge {% if rule.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if rule.is_enabled %}{% trans "ON" %}{% else %}{% trans "OFF" %}{% endif %}</span></td>
             <td><span class="badge badge-{{ rule.rule_action }}">{{ rule.rule_action|upper }}</span></td>
+            <td class="rule-counter" data-rule="{{ rule.name }}"><span style="color:#95a5a6">-</span></td>
             <td>{% if rule.logging %}<span class="badge badge-info">LOG</span>{% else %}-{% endif %}</td>
             <td>{% if rule.is_inverse_src %}{% trans "Yes" %}{% else %}-{% endif %}</td>
             <td>{% if rule.is_inverse_dst %}{% trans "Yes" %}{% else %}-{% endif %}</td>
@@ -22,4 +52,51 @@
         </tbody>
     </table>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var autoTimer = null;
+
+function fetchCounters() {
+    var interval = $('#counter-interval').val();
+    $('#counter-status').text('...');
+    $.getJSON('{% url "rule_counters_api" %}', {interval: interval}, function(data) {
+        var counters = data.counters || {};
+        $('.rule-counter').each(function() {
+            var name = $(this).data('rule');
+            var cnt = counters[name];
+            if (cnt !== undefined) {
+                $(this).html('<strong>' + cnt.toLocaleString() + '</strong>');
+            } else {
+                $(this).html('<span style="color:#95a5a6">0</span>');
+            }
+        });
+        var now = new Date().toLocaleTimeString();
+        $('#counter-status').text(now);
+    }).fail(function(xhr) {
+        var msg = xhr.responseJSON ? xhr.responseJSON.error : 'error';
+        $('#counter-status').html('<span style="color:#e74c3c">' + msg + '</span>');
+    });
+}
+
+$('#counter-refresh').click(fetchCounters);
+$('#counter-interval').change(fetchCounters);
+
+function startAuto() {
+    clearInterval(autoTimer);
+    if ($('#counter-auto').is(':checked')) {
+        var ms = parseInt($('#auto-interval').val());
+        fetchCounters();
+        autoTimer = setInterval(fetchCounters, ms);
+    } else {
+        autoTimer = null;
+    }
+}
+
+$('#counter-auto').change(startAuto);
+$('#auto-interval').change(startAuto);
+
+fetchCounters();
+</script>
 {% endblock %}

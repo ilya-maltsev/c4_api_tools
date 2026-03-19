@@ -17,4 +17,5 @@ urlpatterns = [
     path('system/password-policy/', views.password_policy_view, name='password_policy'),
     path('import/', views.import_config_view, name='import_config'),
     path('sync/', views.sync_from_c4_view, name='sync_from_c4'),
+    path('api/rule-counters/', views.rule_counters_api, name='rule_counters_api'),
 ]

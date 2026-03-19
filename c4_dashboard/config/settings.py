@@ -93,6 +93,12 @@ LOGOUT_REDIRECT_URL = '/login/'
 DASHBOARD_ADMIN_USER = os.environ.get('DASHBOARD_ADMIN_USER', 'admin')
 DASHBOARD_ADMIN_PASSWORD = os.environ.get('DASHBOARD_ADMIN_PASSWORD', 'admin')
 
+C4_MONITOR_DB_HOST = os.environ.get('C4_MONITOR_DB_HOST', '')
+C4_MONITOR_DB_PORT = os.environ.get('C4_MONITOR_DB_PORT', '5432')
+C4_MONITOR_DB_NAME = os.environ.get('C4_MONITOR_DB_NAME', 'monitoring')
+C4_MONITOR_DB_USER = os.environ.get('C4_MONITOR_DB_USER', 'monitoring')
+C4_MONITOR_DB_PASSWORD = os.environ.get('C4_MONITOR_DB_PASSWORD', '')
+
 C4_EXPORTER_API_URL = os.environ.get('C4_EXPORTER_API_URL', 'http://127.0.0.1:8001')
 C4_CA_CERT = os.environ.get('C4_CA_CERT', '')
 C4_CLIENT_CERT = os.environ.get('C4_CLIENT_CERT', '')
