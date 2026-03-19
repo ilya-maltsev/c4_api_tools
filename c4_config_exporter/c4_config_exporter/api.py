@@ -16,7 +16,17 @@ def get_api_connector():
     port = os.environ.get('C4_PORT', '444')
     user = os.environ.get('C4_USER', 'admin')
     password = os.environ.get('C4_PASSWORD', '')
-    return c4_lib.ApiConnector(host, port, user, password)
+    api = c4_lib.ApiConnector(host, port, user, password)
+
+    client_cert = os.environ.get('C4_CLIENT_CERT', '')
+    client_key = os.environ.get('C4_CLIENT_KEY', '')
+    ca_cert = os.environ.get('C4_CA_CERT', '')
+    if client_cert and client_key and os.path.exists(client_cert):
+        api.session.cert = (client_cert, client_key)
+    if ca_cert and os.path.exists(ca_cert):
+        api.session.verify = ca_cert
+
+    return api
 
 
 def remove_fields(obj, fields):
