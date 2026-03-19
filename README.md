@@ -124,6 +124,8 @@ docker compose up -d
 | `C4_MONITOR_DB_USER` | `monitoring` | Пользователь БД |
 | `C4_MONITOR_DB_PASSWORD` | - | Пароль БД |
 
+Переменные задаются в файле `dev_env/dev-c4-dashboard/docker-compose.yml` в секции `environment`.
+
 Если `C4_MONITOR_DB_HOST` не задан, счетчик возвращает ошибку `C4_MONITOR_DB_HOST not configured`. База должна содержать таблицу `ids_log` со стандартной схемой логов Континент 4 (поля `timestamp`, `event_type`, `signature_id`, `rule_name` и др.).
 
 ## Порядок запуска
