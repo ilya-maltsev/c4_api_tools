@@ -2,6 +2,13 @@
 {% block title %}Dashboard - Continent 4{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 {% block content %}
+<div style="margin-bottom:16px">
+    <form method="post" action="{% url 'sync_from_c4' %}" style="display:inline">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="dashboard">
+        <button type="submit" class="btn btn-primary">Sync from Continent 4</button>
+    </form>
+</div>
 <div class="cards">
     <div class="card">
         <div class="card-label">Gateway</div>

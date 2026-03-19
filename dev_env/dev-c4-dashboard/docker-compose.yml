@@ -13,5 +13,6 @@ services:
       DB_PASSWORD: "monitoring"
       DJANGO_DEBUG: "True"
       DJANGO_ALLOWED_HOSTS: "*"
+      C4_EXPORTER_API_URL: "http://127.0.0.1:8001"
     volumes:
       - ../../c4_dashboard:/opt/app

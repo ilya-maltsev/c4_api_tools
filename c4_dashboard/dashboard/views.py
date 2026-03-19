@@ -1,6 +1,9 @@
 import json
 import os
+import urllib.request
+import urllib.error
 from django.shortcuts import render, redirect
+from django.conf import settings
 from django.contrib import messages
 from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
@@ -135,3 +138,38 @@ def import_config_view(request):
         'imports': imports,
         'page': 'import_config',
     })
+
+
+def sync_from_c4_view(request):
+    if request.method != 'POST':
+        return redirect('dashboard')
+
+    api_url = settings.C4_EXPORTER_API_URL.rstrip('/')
+
+    try:
+        req = urllib.request.Request(f"{api_url}/api/configs", method='GET')
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+    except urllib.error.URLError as e:
+        messages.error(request, f"Cannot reach C4 Exporter API: {e}")
+        return redirect(request.POST.get('next', 'dashboard'))
+    except Exception as e:
+        messages.error(request, f"Sync failed: {e}")
+        return redirect(request.POST.get('next', 'dashboard'))
+
+    gateways = data.get('gateways', [])
+    if not gateways:
+        messages.warning(request, "No gateway configs returned from C4")
+        return redirect(request.POST.get('next', 'dashboard'))
+
+    total = 0
+    names = []
+    for gw in gateways:
+        config = gw.get('config', {})
+        name = gw.get('name', gw.get('hwserial', 'unknown'))
+        ci = import_config_json(config, f"api-sync:{name}")
+        total += ci.objects_count
+        names.append(ci.gateway_name or name)
+
+    messages.success(request, f"Synced {len(gateways)} gateway(s): {', '.join(names)} ({total} objects)")
+    return redirect(request.POST.get('next', 'dashboard'))

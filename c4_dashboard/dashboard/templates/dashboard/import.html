@@ -3,12 +3,22 @@
 {% block page_title %}Import Configuration{% endblock %}
 {% block content %}
 <div class="import-form">
+    <h3 style="margin-bottom:12px">Sync from Continent 4</h3>
+    <p style="margin-bottom:16px;color:#6c757d;font-size:13px">Fetch configs directly from C4 via the Exporter API.</p>
+    <form method="post" action="{% url 'sync_from_c4' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="import_config">
+        <button type="submit" class="btn btn-primary">Sync from C4</button>
+    </form>
+</div>
+
+<div class="import-form">
     <h3 style="margin-bottom:12px">Upload JSON config file</h3>
     <p style="margin-bottom:16px;color:#6c757d;font-size:13px">Upload a configuration JSON file exported by c4_config_exporter.</p>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="file" name="config_file" accept=".json">
-        <button type="submit" class="btn btn-primary">Import</button>
+        <button type="submit" class="btn btn-primary">Import File</button>
     </form>
 </div>
 
