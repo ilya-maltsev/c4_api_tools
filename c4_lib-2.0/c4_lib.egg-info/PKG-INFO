@@ -1,5 +1,0 @@
-Metadata-Version: 2.1
-Name: c4_lib
-Version: 2.0
-Requires-Dist: urllib3
-Requires-Dist: requests

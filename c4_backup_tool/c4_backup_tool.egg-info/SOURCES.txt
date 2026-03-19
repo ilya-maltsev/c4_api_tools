@@ -1,9 +1,0 @@
-setup.py
-c4_backup_tool/__init__.py
-c4_backup_tool/__main__.py
-c4_backup_tool.egg-info/PKG-INFO
-c4_backup_tool.egg-info/SOURCES.txt
-c4_backup_tool.egg-info/dependency_links.txt
-c4_backup_tool.egg-info/entry_points.txt
-c4_backup_tool.egg-info/requires.txt
-c4_backup_tool.egg-info/top_level.txt

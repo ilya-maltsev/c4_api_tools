@@ -1,2 +1,0 @@
-[console_scripts]
-c4_config_exporter = c4_config_exporter.__main__:cli

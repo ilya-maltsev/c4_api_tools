@@ -10,12 +10,6 @@ build/
 .env
 *.sqlite3
 staticfiles/
-db.sqlite3
 
 examples/*
-dev_env/dev-postgresql/data/
-dev_env/dev-c4-config-exporter/output/
-*/**/.pyc
-c4_dashboard/config/__pycache__/*
-c4_dashboard/dashboard/__pycache__/urls.cpython-310.pyc
-c4_dashboard/dashboard/__pycache__/views.cpython-310.pyc
+dev_env/
