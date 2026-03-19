@@ -1,20 +1,21 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Firewall Rules - Continent 4{% endblock %}
-{% block page_title %}Firewall Rules{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Firewall Rules" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "Firewall Rules" %}{% endblock %}
 {% block content %}
 <div class="table-wrap">
     <table class="datatable">
-        <thead><tr><th>#</th><th>Name</th><th>Status</th><th>Action</th><th>Logging</th><th>Src Inv.</th><th>Dst Inv.</th><th>Priority</th></tr></thead>
+        <thead><tr><th>#</th><th>{% trans "Name" %}</th><th>{% trans "Status" %}</th><th>{% trans "Action" %}</th><th>{% trans "Logging" %}</th><th>{% trans "Src Inv." %}</th><th>{% trans "Dst Inv." %}</th><th>{% trans "Priority" %}</th></tr></thead>
         <tbody>
         {% for rule in rules %}
         <tr>
             <td>{{ rule.position }}</td>
             <td><strong>{{ rule.name }}</strong></td>
-            <td><span class="badge {% if rule.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if rule.is_enabled %}ON{% else %}OFF{% endif %}</span></td>
+            <td><span class="badge {% if rule.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if rule.is_enabled %}{% trans "ON" %}{% else %}{% trans "OFF" %}{% endif %}</span></td>
             <td><span class="badge badge-{{ rule.rule_action }}">{{ rule.rule_action|upper }}</span></td>
             <td>{% if rule.logging %}<span class="badge badge-info">LOG</span>{% else %}-{% endif %}</td>
-            <td>{% if rule.is_inverse_src %}Yes{% else %}-{% endif %}</td>
-            <td>{% if rule.is_inverse_dst %}Yes{% else %}-{% endif %}</td>
+            <td>{% if rule.is_inverse_src %}{% trans "Yes" %}{% else %}-{% endif %}</td>
+            <td>{% if rule.is_inverse_dst %}{% trans "Yes" %}{% else %}-{% endif %}</td>
             <td>{{ rule.priority }}</td>
         </tr>
         {% endfor %}

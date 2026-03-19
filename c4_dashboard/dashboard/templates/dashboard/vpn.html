@@ -1,22 +1,23 @@
 {% extends "dashboard/base.html" %}
-{% block title %}VPN - Continent 4{% endblock %}
-{% block page_title %}VPN Configuration{% endblock %}
+{% load i18n %}
+{% block title %}VPN - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "VPN Configuration" %}{% endblock %}
 {% block content %}
 {% for vpn in vpns %}
 <div class="panel">
     <div class="panel-header">{{ vpn.vpn_type }}</div>
     <div class="panel-body">
-        <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value"><span class="badge {% if vpn.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if vpn.is_enabled %}Enabled{% else %}Disabled{% endif %}</span></div></div>
+        <div class="detail-row"><div class="detail-label">{% trans "Status" %}</div><div class="detail-value"><span class="badge {% if vpn.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if vpn.is_enabled %}{% trans "Enabled" %}{% else %}{% trans "Disabled" %}{% endif %}</span></div></div>
         {% if vpn.vpn_type == "L3 IPsec" %}
-        <div class="detail-row"><div class="detail-label">Session Breakup</div><div class="detail-value">{% if vpn.session_breakup %}Yes{% else %}No{% endif %}</div></div>
-        <div class="detail-row"><div class="detail-label">Log Tunnel Status</div><div class="detail-value">{% if vpn.is_log_tunnel_status %}Yes{% else %}No{% endif %}</div></div>
+        <div class="detail-row"><div class="detail-label">{% trans "Session Breakup" %}</div><div class="detail-value">{% if vpn.session_breakup %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</div></div>
+        <div class="detail-row"><div class="detail-label">{% trans "Log Tunnel Status" %}</div><div class="detail-value">{% if vpn.is_log_tunnel_status %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</div></div>
         {% endif %}
         {% if vpn.vpn_type == "L2" %}
-        <div class="detail-row"><div class="detail-label">Dynamic Records Lifetime</div><div class="detail-value">{{ vpn.dynamic_records_lifetime }}s</div></div>
+        <div class="detail-row"><div class="detail-label">{% trans "Dynamic Records Lifetime" %}</div><div class="detail-value">{{ vpn.dynamic_records_lifetime }}{% trans "s" %}</div></div>
         {% endif %}
     </div>
 </div>
 {% empty %}
-<p>No VPN configuration found.</p>
+<p>{% trans "No VPN configuration found." %}</p>
 {% endfor %}
 {% endblock %}

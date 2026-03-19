@@ -1,15 +1,16 @@
 {% extends "dashboard/base.html" %}
-{% block title %}App Exceptions - Continent 4{% endblock %}
-{% block page_title %}Application Exceptions{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "App Exceptions" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "Application Exceptions" %}{% endblock %}
 {% block content %}
 <div class="table-wrap">
     <table class="datatable">
-        <thead><tr><th>Name</th><th>Status</th><th>Address</th><th>Vendor ID</th></tr></thead>
+        <thead><tr><th>{% trans "Name" %}</th><th>{% trans "Status" %}</th><th>{% trans "Address" %}</th><th>Vendor ID</th></tr></thead>
         <tbody>
         {% for exc in exceptions %}
         <tr>
             <td><strong>{{ exc.name }}</strong></td>
-            <td><span class="badge {% if exc.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if exc.is_enabled %}ON{% else %}OFF{% endif %}</span></td>
+            <td><span class="badge {% if exc.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if exc.is_enabled %}{% trans "ON" %}{% else %}{% trans "OFF" %}{% endif %}</span></td>
             <td>{{ exc.address|default:"-" }}</td>
             <td>{{ exc.vendor_id|default:"-" }}</td>
         </tr>

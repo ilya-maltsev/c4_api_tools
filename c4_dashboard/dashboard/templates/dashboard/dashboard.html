@@ -1,49 +1,50 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Dashboard - Continent 4{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Dashboard" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "Dashboard" %}{% endblock %}
 {% block content %}
 <div style="margin-bottom:16px">
     <form method="post" action="{% url 'sync_from_c4' %}" style="display:inline">
         {% csrf_token %}
         <input type="hidden" name="next" value="dashboard">
-        <button type="submit" class="btn btn-primary">Sync from Continent 4</button>
+        <button type="submit" class="btn btn-primary">{% trans "Sync from Continent 4" %}</button>
     </form>
 </div>
 <div class="cards">
     <div class="card">
-        <div class="card-label">Gateway</div>
+        <div class="card-label">{% trans "Gateway" %}</div>
         <div class="card-value">{{ gateway.name|default:"N/A" }}</div>
         <div class="card-sub">HW: {{ gateway.hwserial|default:"-" }} | {{ gateway.platform_version|default:"-" }}</div>
     </div>
     <div class="card">
-        <div class="card-label">Domain</div>
+        <div class="card-label">{% trans "Domain" %}</div>
         <div class="card-value">{{ domain.name|default:"N/A" }}</div>
-        <div class="card-sub">Status: {{ domain.status|default:"-" }}</div>
+        <div class="card-sub">{% trans "Status" %}: {{ domain.status|default:"-" }}</div>
     </div>
     <div class="card">
-        <div class="card-label">Firewall Rules</div>
+        <div class="card-label">{% trans "Firewall Rules" %}</div>
         <div class="card-value">{{ rules_count }}</div>
-        <div class="card-sub">Active policy rules</div>
+        <div class="card-sub">{% trans "Active policy rules" %}</div>
     </div>
     <div class="card">
-        <div class="card-label">Services</div>
+        <div class="card-label">{% trans "Services" %}</div>
         <div class="card-value">{{ enabled_services }} / {{ total_services }}</div>
-        <div class="card-sub">Enabled / Total</div>
+        <div class="card-sub">{% trans "Enabled" %} / {% trans "Total" %}</div>
     </div>
 </div>
 
 <div class="cards">
     <div class="card">
-        <div class="card-label">DDoS Protection</div>
+        <div class="card-label">{% trans "DDoS Protection" %}</div>
         {% if ddos %}
         <div class="card-value">
             {% if ddos.mode == "off" %}
-            <span class="badge badge-off">OFF</span>
+            <span class="badge badge-off">{% trans "OFF" %}</span>
             {% else %}
             <span class="badge badge-on">{{ ddos.mode|upper }}</span>
             {% endif %}
         </div>
-        <div class="card-sub">Action: {{ ddos.action|default:"-" }}</div>
+        <div class="card-sub">{% trans "Action" %}: {{ ddos.action|default:"-" }}</div>
         {% else %}
         <div class="card-value">-</div>
         {% endif %}
@@ -53,7 +54,7 @@
         {% for vpn in vpns %}
         <div style="margin-bottom:6px">
             <span class="badge {% if vpn.is_enabled %}badge-on{% else %}badge-off{% endif %}">
-                {{ vpn.vpn_type }} {% if vpn.is_enabled %}ON{% else %}OFF{% endif %}
+                {{ vpn.vpn_type }} {% if vpn.is_enabled %}{% trans "ON" %}{% else %}{% trans "OFF" %}{% endif %}
             </span>
         </div>
         {% empty %}
@@ -61,33 +62,33 @@
         {% endfor %}
     </div>
     <div class="card">
-        <div class="card-label">Certificates</div>
+        <div class="card-label">{% trans "Certificates" %}</div>
         <div class="card-value">{{ certs.count }}</div>
-        <div class="card-sub">Installed certificates</div>
+        <div class="card-sub">{% trans "Installed certificates" %}</div>
     </div>
     <div class="card">
-        <div class="card-label">Last Import</div>
+        <div class="card-label">{% trans "Last Import" %}</div>
         {% if last_import %}
         <div class="card-value" style="font-size:16px">{{ last_import.imported_at|date:"Y-m-d H:i" }}</div>
-        <div class="card-sub">{{ last_import.objects_count }} objects</div>
+        <div class="card-sub">{{ last_import.objects_count }} {% trans "objects" %}</div>
         {% else %}
         <div class="card-value">-</div>
-        <div class="card-sub">No data imported yet</div>
+        <div class="card-sub">{% trans "No data imported yet" %}</div>
         {% endif %}
     </div>
 </div>
 
 {% if interfaces %}
 <div class="panel">
-    <div class="panel-header">Network Interfaces</div>
+    <div class="panel-header">{% trans "Network Interfaces" %}</div>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Name</th><th>Status</th><th>Addresses</th><th>MTU</th><th>Usage</th></tr></thead>
+            <thead><tr><th>{% trans "Name" %}</th><th>{% trans "Status" %}</th><th>{% trans "Addresses" %}</th><th>MTU</th><th>{% trans "Usage" %}</th></tr></thead>
             <tbody>
             {% for iface in interfaces %}
             <tr>
                 <td><strong>{{ iface.name }}</strong></td>
-                <td><span class="badge {% if iface.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if iface.is_enabled %}UP{% else %}DOWN{% endif %}</span></td>
+                <td><span class="badge {% if iface.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if iface.is_enabled %}{% trans "UP" %}{% else %}{% trans "DOWN" %}{% endif %}</span></td>
                 <td>{{ iface.address_display }}</td>
                 <td>{{ iface.mtu }}</td>
                 <td>{{ iface.usage }}</td>
@@ -101,10 +102,10 @@
 
 {% if certs %}
 <div class="panel">
-    <div class="panel-header">Certificates</div>
+    <div class="panel-header">{% trans "Certificates" %}</div>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Subject</th><th>Role</th><th>Issuer</th><th>GOST</th><th>Valid Until</th></tr></thead>
+            <thead><tr><th>{% trans "Subject" %}</th><th>{% trans "Role" %}</th><th>{% trans "Issuer" %}</th><th>{% trans "GOST" %}</th><th>{% trans "Valid Until" %}</th></tr></thead>
             <tbody>
             {% for cert in certs %}
             <tr>

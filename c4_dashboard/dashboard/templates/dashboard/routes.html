@@ -1,17 +1,18 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Static Routes - Continent 4{% endblock %}
-{% block page_title %}Static Routes{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Static Routes" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "Static Routes" %}{% endblock %}
 {% block content %}
 <div class="table-wrap">
     <table class="datatable">
-        <thead><tr><th>Destination</th><th>Gateway</th><th>Metric</th><th>Default</th></tr></thead>
+        <thead><tr><th>{% trans "Destination" %}</th><th>{% trans "Gateway" %}</th><th>{% trans "Metric" %}</th><th>{% trans "Default" %}</th></tr></thead>
         <tbody>
         {% for route in routes %}
         <tr>
             <td>{{ route.dst_ip|default:"0.0.0.0/0" }}</td>
             <td>{{ route.nexthop }}</td>
             <td>{{ route.metric }}</td>
-            <td>{% if route.is_default %}<span class="badge badge-info">Default</span>{% endif %}</td>
+            <td>{% if route.is_default %}<span class="badge badge-info">{% trans "Default" %}</span>{% endif %}</td>
         </tr>
         {% endfor %}
         </tbody>

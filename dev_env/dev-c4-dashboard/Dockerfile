@@ -22,6 +22,8 @@ RUN cd gost-engine && \
 # Stage 2: Dashboard with GOST support
 FROM python:3.10.12-bookworm
 
+RUN apt-get update && apt-get install -y --no-install-recommends gettext && rm -rf /var/lib/apt/lists/*
+
 COPY --from=gost-builder /usr/lib/x86_64-linux-gnu/engines-3/gost.so /usr/lib/x86_64-linux-gnu/engines-3/gost.so
 
 COPY dev_env/dev-nginx-gost/openssl-gost.cnf /etc/ssl/openssl.cnf
@@ -37,4 +39,4 @@ COPY c4_dashboard /opt/app
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py compilemessages && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]

@@ -1,10 +1,10 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Continent 4 Dashboard{% endblock %}</title>
+    <title>{% block title %}{% trans "Continent 4 Dashboard" %}{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'dashboard/style.css' %}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 </head>
@@ -12,36 +12,36 @@
     <nav class="sidebar">
         <div class="sidebar-brand"><span>C4</span> Dashboard</div>
 
-        <div class="sidebar-section">Monitor</div>
+        <div class="sidebar-section">{% trans "Monitor" %}</div>
         <a href="{% url 'dashboard' %}" class="{% if page == 'dashboard' %}active{% endif %}">
-            <span class="icon">&#9632;</span> Dashboard
+            <span class="icon">&#9632;</span> {% trans "Dashboard" %}
         </a>
 
-        <div class="sidebar-section">Network</div>
+        <div class="sidebar-section">{% trans "Network" %}</div>
         <a href="{% url 'interfaces' %}" class="{% if page == 'interfaces' %}active{% endif %}">
-            <span class="icon">&#9700;</span> Interfaces
+            <span class="icon">&#9700;</span> {% trans "Interfaces" %}
         </a>
         <a href="{% url 'routes' %}" class="{% if page == 'routes' %}active{% endif %}">
-            <span class="icon">&#8644;</span> Static Routes
+            <span class="icon">&#8644;</span> {% trans "Static Routes" %}
         </a>
         <a href="{% url 'services' %}" class="{% if page == 'services' %}active{% endif %}">
-            <span class="icon">&#9881;</span> Services
+            <span class="icon">&#9881;</span> {% trans "Services" %}
         </a>
 
-        <div class="sidebar-section">Policy & Objects</div>
+        <div class="sidebar-section">{% trans "Policy & Objects" %}</div>
         <a href="{% url 'firewall_rules' %}" class="{% if page == 'firewall_rules' %}active{% endif %}">
-            <span class="icon">&#9211;</span> Firewall Rules
+            <span class="icon">&#9211;</span> {% trans "Firewall Rules" %}
         </a>
         <a href="{% url 'app_exceptions' %}" class="{% if page == 'app_exceptions' %}active{% endif %}">
-            <span class="icon">&#9776;</span> App Exceptions
+            <span class="icon">&#9776;</span> {% trans "App Exceptions" %}
         </a>
 
-        <div class="sidebar-section">Security</div>
+        <div class="sidebar-section">{% trans "Security" %}</div>
         <a href="{% url 'ddos' %}" class="{% if page == 'ddos' %}active{% endif %}">
-            <span class="icon">&#9888;</span> DDoS Protection
+            <span class="icon">&#9888;</span> {% trans "DDoS Protection" %}
         </a>
         <a href="{% url 'certificates' %}" class="{% if page == 'certificates' %}active{% endif %}">
-            <span class="icon">&#9919;</span> Certificates
+            <span class="icon">&#9919;</span> {% trans "Certificates" %}
         </a>
 
         <div class="sidebar-section">VPN</div>
@@ -49,22 +49,38 @@
             <span class="icon">&#8660;</span> VPN
         </a>
 
-        <div class="sidebar-section">System</div>
+        <div class="sidebar-section">{% trans "System" %}</div>
         <a href="{% url 'admins' %}" class="{% if page == 'admins' %}active{% endif %}">
-            <span class="icon">&#9786;</span> Administrators
+            <span class="icon">&#9786;</span> {% trans "Administrators" %}
         </a>
         <a href="{% url 'password_policy' %}" class="{% if page == 'password_policy' %}active{% endif %}">
-            <span class="icon">&#9919;</span> Password Policy
+            <span class="icon">&#9919;</span> {% trans "Password Policy" %}
         </a>
         <a href="{% url 'import_config' %}" class="{% if page == 'import_config' %}active{% endif %}">
-            <span class="icon">&#8682;</span> Import Config
+            <span class="icon">&#8682;</span> {% trans "Import Config" %}
         </a>
+
+        <div class="sidebar-section">{% trans "Language" %}</div>
+        <div class="lang-switch">
+            {% get_current_language as CURRENT_LANGUAGE %}
+            <form action="{% url 'set_language' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                {% get_available_languages as LANGUAGES %}
+                {% for lang_code, lang_name in LANGUAGES %}
+                <button type="submit" name="language" value="{{ lang_code }}"
+                    class="lang-btn {% if lang_code == CURRENT_LANGUAGE %}lang-active{% endif %}">
+                    {{ lang_code|upper }}
+                </button>
+                {% endfor %}
+            </form>
+        </div>
     </nav>
 
     <div class="main">
         <div class="topbar">
-            <h1>{% block page_title %}Dashboard{% endblock %}</h1>
-            <div class="meta">Continent 4 Monitoring Dashboard</div>
+            <h1>{% block page_title %}{% trans "Dashboard" %}{% endblock %}</h1>
+            <div class="meta">{% trans "Continent 4 Monitoring Dashboard" %}</div>
         </div>
         <div class="content">
             {% if messages %}
@@ -85,7 +101,7 @@
             $('.datatable').DataTable({
                 pageLength: 25,
                 order: [],
-                language: { search: "Filter:" }
+                language: { search: "{% trans 'Filter:' %}" }
             });
         });
     </script>

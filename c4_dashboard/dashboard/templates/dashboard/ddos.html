@@ -1,32 +1,33 @@
 {% extends "dashboard/base.html" %}
-{% block title %}DDoS Protection - Continent 4{% endblock %}
-{% block page_title %}DDoS Protection{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "DDoS Protection" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "DDoS Protection" %}{% endblock %}
 {% block content %}
 {% if ddos %}
 <div class="cards">
     <div class="card">
-        <div class="card-label">Mode</div>
+        <div class="card-label">{% trans "Mode" %}</div>
         <div class="card-value"><span class="badge {% if ddos.mode == 'off' %}badge-off{% else %}badge-on{% endif %}">{{ ddos.mode|upper }}</span></div>
     </div>
     <div class="card">
-        <div class="card-label">Action</div>
+        <div class="card-label">{% trans "Action" %}</div>
         <div class="card-value">{{ ddos.action|upper|default:"-" }}</div>
     </div>
     <div class="card">
-        <div class="card-label">Blocking Time</div>
-        <div class="card-value">{{ ddos.blocking_time }}s</div>
+        <div class="card-label">{% trans "Blocking Time" %}</div>
+        <div class="card-value">{{ ddos.blocking_time }}{% trans "s" %}</div>
     </div>
 </div>
 {% endif %}
 
 <div class="table-wrap">
     <table class="datatable">
-        <thead><tr><th>Attack Type</th><th>Status</th></tr></thead>
+        <thead><tr><th>{% trans "Attack Type" %}</th><th>{% trans "Status" %}</th></tr></thead>
         <tbody>
         {% for rule in ddos_rules %}
         <tr>
             <td><strong>{{ rule.attack_type }}</strong></td>
-            <td><span class="badge {% if rule.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if rule.is_enabled %}Enabled{% else %}Disabled{% endif %}</span></td>
+            <td><span class="badge {% if rule.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if rule.is_enabled %}{% trans "Enabled" %}{% else %}{% trans "Disabled" %}{% endif %}</span></td>
         </tr>
         {% endfor %}
         </tbody>

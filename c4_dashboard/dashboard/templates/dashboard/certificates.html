@@ -1,10 +1,11 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Certificates - Continent 4{% endblock %}
-{% block page_title %}Certificates{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Certificates" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "Certificates" %}{% endblock %}
 {% block content %}
 <div class="table-wrap">
     <table class="datatable">
-        <thead><tr><th>Subject</th><th>Role</th><th>Issuer</th><th>CA</th><th>GOST</th><th>Valid From</th><th>Valid Until</th></tr></thead>
+        <thead><tr><th>{% trans "Subject" %}</th><th>{% trans "Role" %}</th><th>{% trans "Issuer" %}</th><th>CA</th><th>{% trans "GOST" %}</th><th>{% trans "Valid From" %}</th><th>{% trans "Valid Until" %}</th></tr></thead>
         <tbody>
         {% for cert in certs %}
         <tr>

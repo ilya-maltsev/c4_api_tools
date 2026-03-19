@@ -1,0 +1,332 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
+
+msgid "Russian"
+msgstr "Русский"
+
+msgid "English"
+msgstr "Английский"
+
+msgid "Continent 4 Dashboard"
+msgstr "Панель управления Континент 4"
+
+msgid "Continent 4 Monitoring Dashboard"
+msgstr "Панель мониторинга Континент 4"
+
+msgid "Continent 4"
+msgstr "Континент 4"
+
+msgid "Monitor"
+msgstr "Мониторинг"
+
+msgid "Dashboard"
+msgstr "Обзор"
+
+msgid "Network"
+msgstr "Сеть"
+
+msgid "Interfaces"
+msgstr "Интерфейсы"
+
+msgid "Network Interfaces"
+msgstr "Сетевые интерфейсы"
+
+msgid "Static Routes"
+msgstr "Статические маршруты"
+
+msgid "Services"
+msgstr "Сервисы"
+
+msgid "Network Services"
+msgstr "Сетевые сервисы"
+
+msgid "Policy & Objects"
+msgstr "Политики и объекты"
+
+msgid "Firewall Rules"
+msgstr "Правила МЭ"
+
+msgid "App Exceptions"
+msgstr "Исключения приложений"
+
+msgid "Application Exceptions"
+msgstr "Исключения приложений"
+
+msgid "Security"
+msgstr "Безопасность"
+
+msgid "DDoS Protection"
+msgstr "Защита от DDoS"
+
+msgid "Certificates"
+msgstr "Сертификаты"
+
+msgid "System"
+msgstr "Система"
+
+msgid "Administrators"
+msgstr "Администраторы"
+
+msgid "Password Policy"
+msgstr "Парольная политика"
+
+msgid "Import Config"
+msgstr "Импорт конфигурации"
+
+msgid "Import Configuration"
+msgstr "Импорт конфигурации"
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "Filter:"
+msgstr "Фильтр:"
+
+msgid "Sync from Continent 4"
+msgstr "Синхронизация с Континент 4"
+
+msgid "Sync from C4"
+msgstr "Синхронизация с К4"
+
+msgid "Gateway"
+msgstr "Шлюз"
+
+msgid "Domain"
+msgstr "Домен"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Active policy rules"
+msgstr "Активные правила политики"
+
+msgid "Enabled"
+msgstr "Включено"
+
+msgid "Disabled"
+msgstr "Отключено"
+
+msgid "Total"
+msgstr "Всего"
+
+msgid "Action"
+msgstr "Действие"
+
+msgid "ON"
+msgstr "ВКЛ"
+
+msgid "OFF"
+msgstr "ВЫКЛ"
+
+msgid "Installed certificates"
+msgstr "Установленные сертификаты"
+
+msgid "Last Import"
+msgstr "Последний импорт"
+
+msgid "objects"
+msgstr "объектов"
+
+msgid "No data imported yet"
+msgstr "Данные еще не импортированы"
+
+msgid "Name"
+msgstr "Имя"
+
+msgid "Addresses"
+msgstr "Адреса"
+
+msgid "Usage"
+msgstr "Назначение"
+
+msgid "UP"
+msgstr "Активен"
+
+msgid "DOWN"
+msgstr "Неактивен"
+
+msgid "Subject"
+msgstr "Субъект"
+
+msgid "Role"
+msgstr "Роль"
+
+msgid "Issuer"
+msgstr "Издатель"
+
+msgid "GOST"
+msgstr "ГОСТ"
+
+msgid "Valid From"
+msgstr "Действителен с"
+
+msgid "Valid Until"
+msgstr "Действителен до"
+
+msgid "Destination"
+msgstr "Назначение"
+
+msgid "Metric"
+msgstr "Метрика"
+
+msgid "Default"
+msgstr "По умолчанию"
+
+msgid "Service"
+msgstr "Сервис"
+
+msgid "Logging"
+msgstr "Логирование"
+
+msgid "Src Inv."
+msgstr "Инв. ист."
+
+msgid "Dst Inv."
+msgstr "Инв. назн."
+
+msgid "Priority"
+msgstr "Приоритет"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "No"
+msgstr "Нет"
+
+msgid "Mode"
+msgstr "Режим"
+
+msgid "Blocking Time"
+msgstr "Время блокировки"
+
+msgid "s"
+msgstr "с"
+
+msgid "Attack Type"
+msgstr "Тип атаки"
+
+msgid "Address"
+msgstr "Адрес"
+
+msgid "VPN Configuration"
+msgstr "Конфигурация VPN"
+
+msgid "Session Breakup"
+msgstr "Разрыв сессий"
+
+msgid "Log Tunnel Status"
+msgstr "Логирование статуса туннеля"
+
+msgid "Dynamic Records Lifetime"
+msgstr "Время жизни динамических записей"
+
+msgid "No VPN configuration found."
+msgstr "Конфигурация VPN не найдена."
+
+msgid "Login"
+msgstr "Логин"
+
+msgid "Full Name"
+msgstr "Полное имя"
+
+msgid "Password Auth"
+msgstr "Парольная аутентификация"
+
+msgid "Cert Auth"
+msgstr "Аутентификация по сертификату"
+
+msgid "Password Expires"
+msgstr "Срок действия пароля"
+
+msgid "Created"
+msgstr "Создан"
+
+msgid "Active"
+msgstr "Активен"
+
+msgid "Password Requirements"
+msgstr "Требования к паролю"
+
+msgid "Minimum Length"
+msgstr "Минимальная длина"
+
+msgid "characters"
+msgstr "символов"
+
+msgid "Character Difference"
+msgstr "Различие символов"
+
+msgid "Password History"
+msgstr "История паролей"
+
+msgid "Lowercase Required"
+msgstr "Строчные буквы"
+
+msgid "Uppercase Required"
+msgstr "Прописные буквы"
+
+msgid "Digits Required"
+msgstr "Цифры"
+
+msgid "Special Characters Required"
+msgstr "Специальные символы"
+
+msgid "Expiration & Lockout"
+msgstr "Срок действия и блокировка"
+
+msgid "Password Expires After"
+msgstr "Срок действия пароля"
+
+msgid "days"
+msgstr "дн."
+
+msgid "Expiration Notification"
+msgstr "Уведомление об истечении"
+
+msgid "days before"
+msgstr "дн. до истечения"
+
+msgid "Account Block Duration"
+msgstr "Длительность блокировки аккаунта"
+
+msgid "Failed Attempts Before Lock"
+msgstr "Неудачных попыток до блокировки"
+
+msgid "Lock Duration"
+msgstr "Длительность блокировки"
+
+msgid "seconds"
+msgstr "секунд"
+
+msgid "Dictionary Check"
+msgstr "Проверка по словарю"
+
+msgid "No password policy data available."
+msgstr "Данные парольной политики отсутствуют."
+
+msgid "Fetch configs directly from C4 via the Exporter API."
+msgstr "Загрузка конфигураций напрямую из К4 через API экспортера."
+
+msgid "Upload JSON config file"
+msgstr "Загрузить JSON-файл конфигурации"
+
+msgid "Upload a configuration JSON file exported by c4_config_exporter."
+msgstr "Загрузите JSON-файл конфигурации, экспортированный через c4_config_exporter."
+
+msgid "Import File"
+msgstr "Импортировать файл"
+
+msgid "Import History"
+msgstr "История импортов"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "Objects"
+msgstr "Объекты"
