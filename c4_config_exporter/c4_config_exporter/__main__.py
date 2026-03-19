@@ -99,6 +99,7 @@ def cli():
             epilog = f'''example: {os.path.basename(sys.argv[0])} -u user:pass --ip 172.16.10.1 print_cgws
 example: {os.path.basename(sys.argv[0])} -u user:pass --ip 172.16.10.1 get_all_cgw_configs --output_path /path/to/folder
 example: {os.path.basename(sys.argv[0])} -u user:pass --ip 172.16.10.1 get_cgw_config_by_hwserial --hwserial 1 --output_path /path/to/folder
+example: {os.path.basename(sys.argv[0])} -u user:pass --ip 172.16.10.1 --client-cert cert.pem --client-key key.pem print_cgws
             ''',
             add_help = False
         )
@@ -106,6 +107,12 @@ example: {os.path.basename(sys.argv[0])} -u user:pass --ip 172.16.10.1 get_cgw_c
     parser.add_argument('-u', '--creds', help='Реквизиты в формате user:pass', type=str, required=True)
     parser.add_argument('--ip', help='IP сервера.', type=str, required=True)
     parser.add_argument('--port', help='Порт сервера.', default='444', type=str)
+
+    # mTLS
+    parser.add_argument('--client-cert', help='Путь к клиентскому сертификату (PEM).', type=str)
+    parser.add_argument('--client-key', help='Путь к закрытому ключу клиента (PEM).', type=str)
+    parser.add_argument('--ca-cert', help='Путь к CA сертификату для проверки сервера (по умолчанию проверка отключена).', type=str)
+
     parser.add_argument('cmd', choices=['get_all_cgw_configs', 'get_cgw_config_by_hwserial', 'print_cgws'])
     parser.add_argument('--output_path', help='Путь до папки для сохранения конфигураций.\n(get_all_cgw_configs, get_cgw_config_by_hwserial)', type=str)
     parser.add_argument('--hwserial', help='hwserial для получения конфигурации конкретного УБ. (get_cgw_config_by_hwserial)', type=str)
@@ -120,6 +127,11 @@ example: {os.path.basename(sys.argv[0])} -u user:pass --ip 172.16.10.1 get_cgw_c
         parser.print_help()
         return
 
+    # Валидация mTLS аргументов
+    if bool(args.client_cert) != bool(args.client_key):
+        print('[\033[91;1m-\033[0m] --client-cert и --client-key должны быть указаны вместе.')
+        return
+
     colon_index = args.creds.find(':')
     if colon_index < 0:
         print('[\033[91;1m-\033[0m] Неверный формат реквизитов')
@@ -128,6 +140,14 @@ example: {os.path.basename(sys.argv[0])} -u user:pass --ip 172.16.10.1 get_cgw_c
     user = args.creds[:colon_index]
     password = args.creds[colon_index + 1:]
     api = c4_lib.ApiConnector(args.ip, args.port, user, password)
+
+    # mTLS: устанавливаем клиентский сертификат на сессию
+    if args.client_cert and args.client_key:
+        api.session.cert = (args.client_cert, args.client_key)
+
+    # Верификация серверного сертификата (по умолчанию отключена в ApiConnector)
+    if args.ca_cert:
+        api.session.verify = args.ca_cert
 
     remove_confidential_fields = not args.with_confidential_data
 
