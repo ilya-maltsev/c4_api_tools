@@ -129,7 +129,19 @@
                     pageLength: 25,
                     order: [],
                     orderCellsTop: true,
-                    language: { search: "{% trans 'Filter:' %}" }
+                    language: {
+                        search: "{% trans 'Filter:' %}",
+                        lengthMenu: "{% trans 'Show _MENU_ entries' %}",
+                        info: "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
+                        infoEmpty: "{% trans 'No entries' %}",
+                        infoFiltered: "({% trans 'filtered from _MAX_ total' %})",
+                        zeroRecords: "{% trans 'No matching records found' %}",
+                        emptyTable: "{% trans 'No data available' %}",
+                        paginate: {
+                            previous: "{% trans 'Previous' %}",
+                            next: "{% trans 'Next' %}"
+                        }
+                    }
                 });
 
                 // Per-column filter

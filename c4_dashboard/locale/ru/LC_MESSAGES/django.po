@@ -405,3 +405,27 @@ msgstr "Очистить базу данных"
 
 msgid "Database statistics"
 msgstr "Статистика базы данных"
+
+msgid "Show _MENU_ entries"
+msgstr "Показать _MENU_ записей"
+
+msgid "Showing _START_ to _END_ of _TOTAL_ entries"
+msgstr "Записи с _START_ по _END_ из _TOTAL_"
+
+msgid "No entries"
+msgstr "Нет записей"
+
+msgid "filtered from _MAX_ total"
+msgstr "отфильтровано из _MAX_"
+
+msgid "No matching records found"
+msgstr "Совпадений не найдено"
+
+msgid "No data available"
+msgstr "Нет данных"
+
+msgid "Previous"
+msgstr "Назад"
+
+msgid "Next"
+msgstr "Вперед"

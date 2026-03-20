@@ -57,8 +57,10 @@ body { font-family: Lato, Verdana, Helvetica, Arial, sans-serif; background: var
 /* Tables */
 .table-wrap { background: var(--fi-bg); border: 1px solid var(--fi-border); border-radius: 3px; box-shadow: var(--fi-shadow); overflow: hidden; margin-bottom: 20px; }
 .table-wrap table { width: 100%; border-collapse: collapse; }
-.table-wrap th { background: #e7e7e7; padding: 8px 12px; text-align: center !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fi-text); border-bottom: 2px solid var(--fi-border); font-weight: 700; }
-.table-wrap td { padding: 7px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+.table-wrap th { background: #e7e7e7; padding: 8px 12px; text-align: center !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fi-text); border-bottom: 2px solid var(--fi-border); border-right: 1px solid var(--fi-border); font-weight: 700; }
+.table-wrap th:last-child { border-right: none; }
+.table-wrap td { padding: 7px 12px; border-bottom: 1px solid #eee; border-right: 1px solid #eee; font-size: 13px; }
+.table-wrap td:last-child { border-right: none; }
 .table-wrap tr:hover td { background: #f5f7fa; }
 
 /* Detail panels */
