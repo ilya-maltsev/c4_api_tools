@@ -3,13 +3,6 @@
 {% block title %}{% trans "Dashboard" %} - {% trans "Continent 4" %}{% endblock %}
 {% block page_title %}{% trans "Dashboard" %}{% endblock %}
 {% block content %}
-<div style="margin-bottom:16px">
-    <form method="post" action="{% url 'sync_from_c4' %}" style="display:inline">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="dashboard">
-        <button type="submit" class="btn btn-primary">{% trans "Sync from Continent 4" %}</button>
-    </form>
-</div>
 <div class="cards">
     <div class="card">
         <div class="card-label">{% trans "Gateway" %}</div>
@@ -27,45 +20,13 @@
         <div class="card-sub">{% trans "Active policy rules" %}</div>
     </div>
     <div class="card">
-        <div class="card-label">{% trans "Services" %}</div>
-        <div class="card-value">{{ enabled_services }} / {{ total_services }}</div>
-        <div class="card-sub">{% trans "Enabled" %} / {% trans "Total" %}</div>
-    </div>
-</div>
-
-<div class="cards">
-    <div class="card">
-        <div class="card-label">{% trans "DDoS Protection" %}</div>
-        {% if ddos %}
-        <div class="card-value">
-            {% if ddos.mode == "off" %}
-            <span class="badge badge-off">{% trans "OFF" %}</span>
-            {% else %}
-            <span class="badge badge-on">{{ ddos.mode|upper }}</span>
-            {% endif %}
-        </div>
-        <div class="card-sub">{% trans "Action" %}: {{ ddos.action|default:"-" }}</div>
-        {% else %}
-        <div class="card-value">-</div>
-        {% endif %}
-    </div>
-    <div class="card">
-        <div class="card-label">VPN</div>
-        {% for vpn in vpns %}
-        <div style="margin-bottom:6px">
-            <span class="badge {% if vpn.is_enabled %}badge-on{% else %}badge-off{% endif %}">
-                {{ vpn.vpn_type }} {% if vpn.is_enabled %}{% trans "ON" %}{% else %}{% trans "OFF" %}{% endif %}
-            </span>
-        </div>
-        {% empty %}
-        <div class="card-value">-</div>
-        {% endfor %}
-    </div>
-    <div class="card">
         <div class="card-label">{% trans "Certificates" %}</div>
         <div class="card-value">{{ certs.count }}</div>
         <div class="card-sub">{% trans "Installed certificates" %}</div>
     </div>
+</div>
+
+<div class="cards">
     <div class="card">
         <div class="card-label">{% trans "Last Import" %}</div>
         {% if last_import %}
