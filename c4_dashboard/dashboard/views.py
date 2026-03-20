@@ -13,7 +13,7 @@ from django.http import JsonResponse
 from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
-    DDoSRule, AppException, PasswordPolicy, ServiceComponent,
+    DDoSRule, NetworkObject, AppException, PasswordPolicy, ServiceComponent,
 )
 from .importer import import_config_json
 
@@ -96,8 +96,17 @@ def services_view(request):
 
 
 @login_required
+def network_objects_view(request):
+    objects = NetworkObject.objects.all()
+    return render(request, 'dashboard/network_objects.html', {
+        'objects': objects,
+        'page': 'network_objects',
+    })
+
+
+@login_required
 def firewall_rules_view(request):
-    rules = FirewallRule.objects.all()
+    rules = FirewallRule.objects.prefetch_related('source_objects', 'destination_objects').all()
     return render(request, 'dashboard/firewall_rules.html', {
         'rules': rules,
         'page': 'firewall_rules',

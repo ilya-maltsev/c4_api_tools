@@ -94,6 +94,8 @@ class FirewallRule(models.Model):
     priority = models.IntegerField(default=0)
     is_inverse_src = models.BooleanField(default=False)
     is_inverse_dst = models.BooleanField(default=False)
+    source_objects = models.ManyToManyField('NetworkObject', blank=True, related_name='fw_rules_as_src')
+    destination_objects = models.ManyToManyField('NetworkObject', blank=True, related_name='fw_rules_as_dst')
     domain_level = models.IntegerField(default=0)
     lastmodified = models.BigIntegerField(default=0)
     config_import = models.ForeignKey(ConfigImport, on_delete=models.CASCADE, null=True)
@@ -103,6 +105,16 @@ class FirewallRule(models.Model):
 
     def __str__(self):
         return f"#{self.position} {self.name} ({self.rule_action})"
+
+    @property
+    def source_display(self):
+        objs = self.source_objects.all()
+        return ', '.join(o.name for o in objs) if objs else 'any'
+
+    @property
+    def destination_display(self):
+        objs = self.destination_objects.all()
+        return ', '.join(o.name for o in objs) if objs else 'any'
 
 
 class Certificate(models.Model):
@@ -188,6 +200,24 @@ class DDoSRule(models.Model):
 
     def __str__(self):
         return self.attack_type
+
+
+class NetworkObject(models.Model):
+    uuid = models.UUIDField(primary_key=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    is_enabled = models.BooleanField(default=True)
+    ip = models.CharField(max_length=64, blank=True)
+    subtype = models.CharField(max_length=32, blank=True)
+    domain_level = models.IntegerField(default=0)
+    lastmodified = models.BigIntegerField(default=0)
+    config_import = models.ForeignKey(ConfigImport, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.ip})"
 
 
 class AppException(models.Model):

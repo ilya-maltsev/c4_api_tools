@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Network Objects" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "Network Objects" %}{% endblock %}
+{% block content %}
+<div class="table-wrap">
+    <table class="datatable">
+        <thead><tr><th>{% trans "Name" %}</th><th>{% trans "Type" %}</th><th>{% trans "Address" %}</th><th>{% trans "Status" %}</th><th>{% trans "Description" %}</th></tr></thead>
+        <tbody>
+        {% for obj in objects %}
+        <tr>
+            <td><strong>{{ obj.name }}</strong></td>
+            <td><span class="badge badge-info">{{ obj.subtype }}</span></td>
+            <td>{{ obj.ip|default:"-" }}</td>
+            <td><span class="badge {% if obj.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if obj.is_enabled %}{% trans "ON" %}{% else %}{% trans "OFF" %}{% endif %}</span></td>
+            <td>{{ obj.description|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

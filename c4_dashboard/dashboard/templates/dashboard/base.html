@@ -32,6 +32,9 @@
         <a href="{% url 'firewall_rules' %}" class="{% if page == 'firewall_rules' %}active{% endif %}">
             <span class="icon">&#9730;</span> {% trans "Firewall Rules" %}
         </a>
+        <a href="{% url 'network_objects' %}" class="{% if page == 'network_objects' %}active{% endif %}">
+            <span class="icon">&#9641;</span> {% trans "Network Objects" %}
+        </a>
         <a href="{% url 'app_exceptions' %}" class="{% if page == 'app_exceptions' %}active{% endif %}">
             <span class="icon">&#9776;</span> {% trans "App Exceptions" %}
         </a>
@@ -105,10 +108,36 @@
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('.datatable').DataTable({
-                pageLength: 25,
-                order: [],
-                language: { search: "{% trans 'Filter:' %}" }
+            $('.datatable').each(function() {
+                var $table = $(this);
+                // Add filter row to thead
+                var $headerRow = $table.find('thead tr');
+                var $filterRow = $('<tr class="col-filter-row"></tr>');
+                $headerRow.find('th').each(function() {
+                    $filterRow.append(
+                        '<th><div class="col-filter-wrap">' +
+                        '<input type="text" class="col-filter-input" placeholder="&#9660;">' +
+                        '</div></th>'
+                    );
+                });
+                $headerRow.after($filterRow);
+
+                var dt = $table.DataTable({
+                    pageLength: 25,
+                    order: [],
+                    orderCellsTop: true,
+                    language: { search: "{% trans 'Filter:' %}" }
+                });
+
+                // Per-column filter
+                $filterRow.find('.col-filter-input').each(function(i) {
+                    $(this).on('keyup change', function() {
+                        var col = dt.column(i);
+                        if (col.search() !== this.value) {
+                            col.search(this.value).draw();
+                        }
+                    });
+                });
             });
         });
     </script>

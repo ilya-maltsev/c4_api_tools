@@ -375,3 +375,15 @@ msgstr "каждую 1 мин"
 
 msgid "every 5 min"
 msgstr "каждые 5 мин"
+
+msgid "Network Objects"
+msgstr "Сетевые объекты"
+
+msgid "Source"
+msgstr "Источник"
+
+msgid "Type"
+msgstr "Тип"
+
+msgid "Description"
+msgstr "Описание"

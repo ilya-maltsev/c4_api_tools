@@ -1,7 +1,7 @@
 from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
-    DDoSRule, AppException, PasswordPolicy, ServiceComponent,
+    DDoSRule, NetworkObject, AppException, PasswordPolicy, ServiceComponent,
 )
 
 
@@ -214,10 +214,43 @@ def import_config_json(data, filename=''):
                 'params': params,
                 **base,
             })
+
+        elif obj_type == 'netobject':
+            NetworkObject.objects.update_or_create(uuid=uuid, defaults={
+                'name': obj.get('name', ''),
+                'description': obj.get('description', ''),
+                'is_enabled': obj.get('is_enabled', True),
+                'ip': obj.get('ip', ''),
+                'subtype': obj.get('subtype', ''),
+                **base,
+            })
         else:
             continue
 
         count += 1
+
+    # Second pass: process links (fwrule <-> netobject)
+    links = [o for o in objects if o.get('type') == 'link']
+    for link in links:
+        linkname = link.get('linkname', '')
+        if linkname not in ('clf_source', 'clf_destination'):
+            continue
+
+        rule_uuid = link.get('left_uuid')
+        obj_uuid = link.get('right_uuid')
+        if not rule_uuid or not obj_uuid:
+            continue
+
+        try:
+            rule = FirewallRule.objects.get(uuid=rule_uuid)
+            netobj = NetworkObject.objects.get(uuid=obj_uuid)
+        except (FirewallRule.DoesNotExist, NetworkObject.DoesNotExist):
+            continue
+
+        if linkname == 'clf_source':
+            rule.source_objects.add(netobj)
+        elif linkname == 'clf_destination':
+            rule.destination_objects.add(netobj)
 
     ci.objects_count = count
     ci.save()

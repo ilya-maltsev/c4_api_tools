@@ -27,12 +27,11 @@
         <thead><tr>
             <th>#</th>
             <th>{% trans "Name" %}</th>
-            <th>{% trans "Status" %}</th>
+            <th>{% trans "Source" %}</th>
+            <th>{% trans "Destination" %}</th>
             <th>{% trans "Action" %}</th>
             <th>{% trans "Counter" %}</th>
             <th>{% trans "Logging" %}</th>
-            <th>{% trans "Src Inv." %}</th>
-            <th>{% trans "Dst Inv." %}</th>
             <th>{% trans "Priority" %}</th>
         </tr></thead>
         <tbody>
@@ -40,12 +39,11 @@
         <tr>
             <td>{{ rule.position }}</td>
             <td><strong>{{ rule.name }}</strong></td>
-            <td><span class="badge {% if rule.is_enabled %}badge-on{% else %}badge-off{% endif %}">{% if rule.is_enabled %}{% trans "ON" %}{% else %}{% trans "OFF" %}{% endif %}</span></td>
+            <td class="obj-cell">{% if rule.is_inverse_src %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.source_objects.all %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype }}" data-ip="{{ obj.ip }}">{{ obj.name }}</span>{% empty %}<span class="obj-any">any</span>{% endfor %}</td>
+            <td class="obj-cell">{% if rule.is_inverse_dst %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.destination_objects.all %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype }}" data-ip="{{ obj.ip }}">{{ obj.name }}</span>{% empty %}<span class="obj-any">any</span>{% endfor %}</td>
             <td><span class="badge badge-{{ rule.rule_action }}">{{ rule.rule_action|upper }}</span></td>
             <td class="rule-counter" data-rule="{{ rule.name }}"><span style="color:#95a5a6">-</span></td>
             <td>{% if rule.logging %}<span class="badge badge-info">LOG</span>{% else %}-{% endif %}</td>
-            <td>{% if rule.is_inverse_src %}{% trans "Yes" %}{% else %}-{% endif %}</td>
-            <td>{% if rule.is_inverse_dst %}{% trans "Yes" %}{% else %}-{% endif %}</td>
             <td>{{ rule.priority }}</td>
         </tr>
         {% endfor %}
@@ -98,5 +96,24 @@ $('#counter-auto').change(startAuto);
 $('#auto-interval').change(startAuto);
 
 fetchCounters();
+
+// Tooltip for network object chips
+var $tip = $('<div class="obj-tooltip"></div>').appendTo('body').hide();
+
+$(document).on('mouseenter', '.obj-chip', function(e) {
+    var name = $(this).data('name');
+    var type = $(this).data('type');
+    var ip = $(this).data('ip');
+    var typeLabel = type === 'network' ? 'Subnet' : 'Host';
+    $tip.html(
+        '<div class="obj-tip-row"><span class="obj-tip-label">Address:</span> ' + name + '</div>' +
+        '<div class="obj-tip-row"><span class="obj-tip-label">Type:</span> ' + typeLabel + '</div>' +
+        '<div class="obj-tip-row"><span class="obj-tip-label">' + typeLabel + ':</span> ' + ip + '</div>'
+    );
+    var off = $(this).offset();
+    $tip.css({top: off.top - $tip.outerHeight() - 6, left: off.left}).show();
+}).on('mouseleave', '.obj-chip', function() {
+    $tip.hide();
+});
 </script>
 {% endblock %}

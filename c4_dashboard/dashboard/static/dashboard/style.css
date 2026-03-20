@@ -57,7 +57,7 @@ body { font-family: Lato, Verdana, Helvetica, Arial, sans-serif; background: var
 /* Tables */
 .table-wrap { background: var(--fi-bg); border: 1px solid var(--fi-border); border-radius: 3px; box-shadow: var(--fi-shadow); overflow: hidden; margin-bottom: 20px; }
 .table-wrap table { width: 100%; border-collapse: collapse; }
-.table-wrap th { background: #e7e7e7; padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fi-text); border-bottom: 2px solid var(--fi-border); font-weight: 700; }
+.table-wrap th { background: #e7e7e7; padding: 8px 12px; text-align: center !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fi-text); border-bottom: 2px solid var(--fi-border); font-weight: 700; }
 .table-wrap td { padding: 7px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
 .table-wrap tr:hover td { background: #f5f7fa; }
 
@@ -96,11 +96,12 @@ body { font-family: Lato, Verdana, Helvetica, Arial, sans-serif; background: var
 
 /* DataTables overrides */
 .dataTables_wrapper { padding: 6px 12px 8px; font-size: 12px; }
-.dataTables_wrapper .dataTables_length,
-.dataTables_wrapper .dataTables_filter { margin-bottom: 6px; }
+.dataTables_wrapper::after { content: ''; display: table; clear: both; }
+.dataTables_wrapper .dataTables_filter { float: left; margin-bottom: 6px; }
+.dataTables_wrapper .dataTables_length { float: right; margin-bottom: 6px; }
 .dataTables_wrapper .dataTables_length label,
 .dataTables_wrapper .dataTables_filter label { font-size: 12px; color: var(--fi-text-muted); }
-.dataTables_filter input { border: 1px solid var(--fi-border); border-radius: 3px; padding: 3px 8px; font-size: 12px; height: 26px; }
+.dataTables_filter input { border: 1px solid var(--fi-border); border-radius: 3px; padding: 3px 8px; font-size: 12px; height: 26px; min-width: 300px; }
 .dataTables_filter input:focus { border-color: var(--fi-primary); outline: none; box-shadow: 0 0 4px rgba(36,112,188,0.3); }
 .dataTables_length select { border: 1px solid var(--fi-border); border-radius: 3px; padding: 2px 4px; font-size: 12px; height: 26px; }
 .dataTables_info { font-size: 11px; color: var(--fi-text-muted); }
@@ -109,7 +110,27 @@ body { font-family: Lato, Verdana, Helvetica, Arial, sans-serif; background: var
 .dataTables_paginate .paginate_button.current { background: var(--fi-primary) !important; color: #fff !important; border-color: var(--fi-primary) !important; }
 .dataTables_paginate .paginate_button:hover { background: #e8edf1 !important; color: var(--fi-text) !important; }
 
+/* Column filters */
+.col-filter-row th { background: #f8f9fa !important; padding: 4px 6px !important; border-bottom: 1px solid var(--fi-border) !important; }
+.col-filter-wrap { display: flex; }
+.col-filter-input { width: 100%; border: 1px solid #ddd; border-radius: 3px; padding: 2px 6px; font-size: 11px; height: 22px; font-family: inherit; color: var(--fi-text); background: var(--fi-bg); }
+.col-filter-input:focus { border-color: var(--fi-primary); outline: none; box-shadow: 0 0 3px rgba(36,112,188,0.25); }
+.col-filter-input::placeholder { color: #ccc; text-align: center; }
+
 /* Compact select/input for toolbar controls */
 .toolbar-select { border: 1px solid var(--fi-border); border-radius: 3px; padding: 3px 8px; font-size: 12px; height: 26px; font-family: inherit; }
 .toolbar-label { font-size: 12px; color: var(--fi-text-muted); }
 .toolbar-checkbox { vertical-align: middle; margin-right: 3px; }
+
+/* Network object chips in firewall rules */
+.obj-cell { line-height: 1.8; }
+.obj-chip { display: inline-block; padding: 1px 6px; margin: 1px 2px; border: 1px solid transparent; border-radius: 3px; font-size: 12px; color: var(--fi-text); cursor: default; transition: border-color 0.15s, background 0.15s; }
+.obj-chip:hover { border-color: var(--fi-border); background: #f5f7fa; }
+tr:hover .obj-chip { border-color: var(--fi-border); background: var(--fi-bg); }
+.obj-any { font-size: 12px; color: var(--fi-text-muted); font-style: italic; }
+.obj-inv { display: inline-block; font-size: 10px; font-weight: 700; color: var(--fi-error); background: #fef0f0; padding: 0 4px; border-radius: 2px; margin-right: 2px; }
+
+/* Object tooltip */
+.obj-tooltip { position: absolute; z-index: 9999; background: var(--fi-bg); border: 1px solid var(--fi-border); border-radius: 3px; padding: 8px 12px; box-shadow: 0 3px 8px rgba(0,0,0,0.15); font-size: 12px; pointer-events: none; min-width: 180px; }
+.obj-tip-row { padding: 2px 0; }
+.obj-tip-label { font-weight: 700; color: var(--fi-text-muted); display: inline-block; width: 65px; }
