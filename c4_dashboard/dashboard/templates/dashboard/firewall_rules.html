@@ -29,22 +29,22 @@
             <th>{% trans "Name" %}</th>
             <th>{% trans "Source" %}</th>
             <th>{% trans "Destination" %}</th>
+            <th>{% trans "Service" %}</th>
             <th>{% trans "Action" %}</th>
             <th>{% trans "Counter" %}</th>
             <th>{% trans "Logging" %}</th>
-            <th>{% trans "Priority" %}</th>
         </tr></thead>
         <tbody>
         {% for rule in rules %}
         <tr>
             <td>{{ rule.position }}</td>
             <td><strong>{{ rule.name }}</strong></td>
-            <td class="obj-cell">{% if rule.is_inverse_src %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.source_objects.all %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype }}" data-ip="{{ obj.ip }}">{{ obj.name }}</span>{% empty %}<span class="obj-any">any</span>{% endfor %}</td>
-            <td class="obj-cell">{% if rule.is_inverse_dst %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.destination_objects.all %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype }}" data-ip="{{ obj.ip }}">{{ obj.name }}</span>{% empty %}<span class="obj-any">any</span>{% endfor %}</td>
+            <td class="obj-cell">{% if rule.is_inverse_src %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.source_display_list %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype|default:'group' }}" data-ip="{{ obj.ip|default:'' }}">{{ obj.name }}</span>{% empty %}<span class="obj-any">any</span>{% endfor %}</td>
+            <td class="obj-cell">{% if rule.is_inverse_dst %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.destination_display_list %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype|default:'group' }}" data-ip="{{ obj.ip|default:'' }}">{{ obj.name }}</span>{% empty %}<span class="obj-any">any</span>{% endfor %}</td>
+            <td class="obj-cell">{% for svc in rule.services.all %}<span class="obj-chip svc-chip" data-name="{{ svc.name }}" data-type="{{ svc.proto_display }}" data-ip="{{ svc.dst_port }}">{{ svc.name }}</span>{% empty %}<span class="obj-any">any</span>{% endfor %}</td>
             <td><span class="badge badge-{{ rule.rule_action }}">{{ rule.rule_action|upper }}</span></td>
             <td class="rule-counter" data-rule="{{ rule.name }}"><span style="color:#95a5a6">-</span></td>
             <td>{% if rule.logging %}<span class="badge badge-info">LOG</span>{% else %}-{% endif %}</td>
-            <td>{{ rule.priority }}</td>
         </tr>
         {% endfor %}
         </tbody>
@@ -104,12 +104,21 @@ $(document).on('mouseenter', '.obj-chip', function(e) {
     var name = $(this).data('name');
     var type = $(this).data('type');
     var ip = $(this).data('ip');
-    var typeLabel = type === 'network' ? 'Subnet' : 'Host';
-    $tip.html(
-        '<div class="obj-tip-row"><span class="obj-tip-label">Address:</span> ' + name + '</div>' +
-        '<div class="obj-tip-row"><span class="obj-tip-label">Type:</span> ' + typeLabel + '</div>' +
-        '<div class="obj-tip-row"><span class="obj-tip-label">' + typeLabel + ':</span> ' + ip + '</div>'
-    );
+    var isSvc = $(this).hasClass('svc-chip');
+    var html;
+    if (isSvc) {
+        html = '<div class="obj-tip-row"><span class="obj-tip-label">{% trans "Service" %}:</span> ' + name + '</div>' +
+               '<div class="obj-tip-row"><span class="obj-tip-label">{% trans "Protocol" %}:</span> ' + type + '</div>';
+        if (ip) html += '<div class="obj-tip-row"><span class="obj-tip-label">{% trans "Port" %}:</span> ' + ip + '</div>';
+    } else if (type === 'group') {
+        html = '<div class="obj-tip-row"><span class="obj-tip-label">{% trans "Group" %}:</span> ' + name + '</div>';
+    } else {
+        var typeLabel = type === 'network' ? 'Subnet' : 'Host';
+        html = '<div class="obj-tip-row"><span class="obj-tip-label">{% trans "Address" %}:</span> ' + name + '</div>' +
+               '<div class="obj-tip-row"><span class="obj-tip-label">{% trans "Type" %}:</span> ' + typeLabel + '</div>';
+        if (ip) html += '<div class="obj-tip-row"><span class="obj-tip-label">' + typeLabel + ':</span> ' + ip + '</div>';
+    }
+    $tip.html(html);
     var off = $(this).offset();
     $tip.css({top: off.top - $tip.outerHeight() - 6, left: off.left}).show();
 }).on('mouseleave', '.obj-chip', function() {

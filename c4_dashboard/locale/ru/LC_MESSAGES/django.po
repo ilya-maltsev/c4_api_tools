@@ -429,3 +429,21 @@ msgstr "Назад"
 
 msgid "Next"
 msgstr "Вперед"
+
+msgid "Protocol"
+msgstr "Протокол"
+
+msgid "Port"
+msgstr "Порт"
+
+msgid "Group"
+msgstr "Группа"
+
+msgid "Service Objects"
+msgstr "Объекты сервисов"
+
+msgid "Destination Port"
+msgstr "Порт назначения"
+
+msgid "Source Port"
+msgstr "Порт источника"

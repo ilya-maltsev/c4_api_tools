@@ -82,6 +82,52 @@ class StaticRoute(models.Model):
         return f"{dst} via {self.nexthop}"
 
 
+PROTO_MAP = {1: 'ICMP', 6: 'TCP', 17: 'UDP', 47: 'GRE', 50: 'ESP', 51: 'AH'}
+
+
+class ServiceObject(models.Model):
+    uuid = models.UUIDField(primary_key=True)
+    name = models.CharField(max_length=255)
+    proto = models.IntegerField(default=0)
+    src_port = models.CharField(max_length=64, blank=True)
+    dst_port = models.CharField(max_length=64, blank=True)
+    domain_level = models.IntegerField(default=0)
+    lastmodified = models.BigIntegerField(default=0)
+    config_import = models.ForeignKey(ConfigImport, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def proto_display(self):
+        return PROTO_MAP.get(self.proto, str(self.proto))
+
+    @property
+    def port_display(self):
+        if self.dst_port:
+            return self.dst_port
+        return ''
+
+
+class ObjectGroup(models.Model):
+    uuid = models.UUIDField(primary_key=True)
+    name = models.CharField(max_length=255)
+    subtype = models.CharField(max_length=32, blank=True)
+    members = models.ManyToManyField('NetworkObject', blank=True, related_name='groups')
+    domain_level = models.IntegerField(default=0)
+    lastmodified = models.BigIntegerField(default=0)
+    config_import = models.ForeignKey(ConfigImport, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class FirewallRule(models.Model):
     uuid = models.UUIDField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -96,6 +142,9 @@ class FirewallRule(models.Model):
     is_inverse_dst = models.BooleanField(default=False)
     source_objects = models.ManyToManyField('NetworkObject', blank=True, related_name='fw_rules_as_src')
     destination_objects = models.ManyToManyField('NetworkObject', blank=True, related_name='fw_rules_as_dst')
+    source_groups = models.ManyToManyField(ObjectGroup, blank=True, related_name='fw_rules_as_src')
+    destination_groups = models.ManyToManyField(ObjectGroup, blank=True, related_name='fw_rules_as_dst')
+    services = models.ManyToManyField(ServiceObject, blank=True, related_name='fw_rules')
     domain_level = models.IntegerField(default=0)
     lastmodified = models.BigIntegerField(default=0)
     config_import = models.ForeignKey(ConfigImport, on_delete=models.CASCADE, null=True)
@@ -107,14 +156,19 @@ class FirewallRule(models.Model):
         return f"#{self.position} {self.name} ({self.rule_action})"
 
     @property
-    def source_display(self):
-        objs = self.source_objects.all()
-        return ', '.join(o.name for o in objs) if objs else 'any'
+    def source_display_list(self):
+        items = list(self.source_objects.all()) + list(self.source_groups.all())
+        return items
 
     @property
-    def destination_display(self):
-        objs = self.destination_objects.all()
-        return ', '.join(o.name for o in objs) if objs else 'any'
+    def destination_display_list(self):
+        items = list(self.destination_objects.all()) + list(self.destination_groups.all())
+        return items
+
+    @property
+    def service_display(self):
+        svcs = self.services.all()
+        return ', '.join(s.name for s in svcs) if svcs else 'any'
 
 
 class Certificate(models.Model):

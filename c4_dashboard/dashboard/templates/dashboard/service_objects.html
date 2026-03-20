@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Service Objects" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "Service Objects" %}{% endblock %}
+{% block content %}
+<div class="table-wrap">
+    <table class="datatable">
+        <thead><tr><th>{% trans "Name" %}</th><th>{% trans "Protocol" %}</th><th>{% trans "Destination Port" %}</th><th>{% trans "Source Port" %}</th></tr></thead>
+        <tbody>
+        {% for svc in services %}
+        <tr>
+            <td><strong>{{ svc.name }}</strong></td>
+            <td>{{ svc.proto_display }}</td>
+            <td>{{ svc.dst_port|default:"-" }}</td>
+            <td>{{ svc.src_port|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

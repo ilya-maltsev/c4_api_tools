@@ -1,7 +1,8 @@
 from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
-    DDoSRule, NetworkObject, AppException, PasswordPolicy, ServiceComponent,
+    DDoSRule, NetworkObject, ServiceObject, ObjectGroup,
+    AppException, PasswordPolicy, ServiceComponent,
 )
 
 
@@ -224,33 +225,82 @@ def import_config_json(data, filename=''):
                 'subtype': obj.get('subtype', ''),
                 **base,
             })
+
+        elif obj_type == 'service':
+            ServiceObject.objects.update_or_create(uuid=uuid, defaults={
+                'name': obj.get('name', ''),
+                'proto': safe_int(obj.get('proto', 0)),
+                'src_port': obj.get('src', ''),
+                'dst_port': obj.get('dst', ''),
+                **base,
+            })
+
+        elif obj_type == 'group':
+            ObjectGroup.objects.update_or_create(uuid=uuid, defaults={
+                'name': obj.get('name', ''),
+                'subtype': obj.get('subtype', ''),
+                **base,
+            })
         else:
             continue
 
         count += 1
 
-    # Second pass: process links (fwrule <-> netobject)
+    # Second pass: process links
     links = [o for o in objects if o.get('type') == 'link']
     for link in links:
         linkname = link.get('linkname', '')
-        if linkname not in ('clf_source', 'clf_destination'):
+        left_uuid = link.get('left_uuid')
+        right_uuid = link.get('right_uuid')
+        if not left_uuid or not right_uuid:
             continue
 
-        rule_uuid = link.get('left_uuid')
-        obj_uuid = link.get('right_uuid')
-        if not rule_uuid or not obj_uuid:
-            continue
+        # fwrule -> netobject (source/destination)
+        if linkname in ('clf_source', 'clf_destination'):
+            try:
+                rule = FirewallRule.objects.get(uuid=left_uuid)
+            except FirewallRule.DoesNotExist:
+                continue
 
-        try:
-            rule = FirewallRule.objects.get(uuid=rule_uuid)
-            netobj = NetworkObject.objects.get(uuid=obj_uuid)
-        except (FirewallRule.DoesNotExist, NetworkObject.DoesNotExist):
-            continue
+            # Try netobject first
+            try:
+                netobj = NetworkObject.objects.get(uuid=right_uuid)
+                if linkname == 'clf_source':
+                    rule.source_objects.add(netobj)
+                else:
+                    rule.destination_objects.add(netobj)
+                continue
+            except NetworkObject.DoesNotExist:
+                pass
 
-        if linkname == 'clf_source':
-            rule.source_objects.add(netobj)
-        elif linkname == 'clf_destination':
-            rule.destination_objects.add(netobj)
+            # Try group
+            try:
+                group = ObjectGroup.objects.get(uuid=right_uuid)
+                if linkname == 'clf_source':
+                    rule.source_groups.add(group)
+                else:
+                    rule.destination_groups.add(group)
+                continue
+            except ObjectGroup.DoesNotExist:
+                pass
+
+        # fwrule -> service
+        elif linkname == 'clf_service':
+            try:
+                rule = FirewallRule.objects.get(uuid=left_uuid)
+                svc = ServiceObject.objects.get(uuid=right_uuid)
+                rule.services.add(svc)
+            except (FirewallRule.DoesNotExist, ServiceObject.DoesNotExist):
+                pass
+
+        # group -> netobject (members)
+        elif linkname == 'group_member':
+            try:
+                group = ObjectGroup.objects.get(uuid=left_uuid)
+                member = NetworkObject.objects.get(uuid=right_uuid)
+                group.members.add(member)
+            except (ObjectGroup.DoesNotExist, NetworkObject.DoesNotExist):
+                pass
 
     ci.objects_count = count
     ci.save()

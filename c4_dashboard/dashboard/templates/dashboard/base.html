@@ -24,9 +24,6 @@
         <a href="{% url 'routes' %}" class="{% if page == 'routes' %}active{% endif %}">
             <span class="icon">&#10132;</span> {% trans "Static Routes" %}
         </a>
-        <a href="{% url 'services' %}" class="{% if page == 'services' %}active{% endif %}">
-            <span class="icon">&#9881;</span> {% trans "Services" %}
-        </a>
 
         <div class="sidebar-section">{% trans "Policy & Objects" %}</div>
         <a href="{% url 'firewall_rules' %}" class="{% if page == 'firewall_rules' %}active{% endif %}">
@@ -35,21 +32,13 @@
         <a href="{% url 'network_objects' %}" class="{% if page == 'network_objects' %}active{% endif %}">
             <span class="icon">&#9641;</span> {% trans "Network Objects" %}
         </a>
-        <a href="{% url 'app_exceptions' %}" class="{% if page == 'app_exceptions' %}active{% endif %}">
-            <span class="icon">&#9776;</span> {% trans "App Exceptions" %}
+        <a href="{% url 'service_objects' %}" class="{% if page == 'service_objects' %}active{% endif %}">
+            <span class="icon">&#9881;</span> {% trans "Service Objects" %}
         </a>
 
         <div class="sidebar-section">{% trans "Security" %}</div>
-        <a href="{% url 'ddos' %}" class="{% if page == 'ddos' %}active{% endif %}">
-            <span class="icon">&#9888;</span> {% trans "DDoS Protection" %}
-        </a>
         <a href="{% url 'certificates' %}" class="{% if page == 'certificates' %}active{% endif %}">
             <span class="icon">&#9871;</span> {% trans "Certificates" %}
-        </a>
-
-        <div class="sidebar-section">VPN</div>
-        <a href="{% url 'vpn' %}" class="{% if page == 'vpn' %}active{% endif %}">
-            <span class="icon">&#8644;</span> VPN
         </a>
 
         <div class="sidebar-section">{% trans "System" %}</div>

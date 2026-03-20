@@ -13,7 +13,7 @@ from django.http import JsonResponse
 from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
-    DDoSRule, NetworkObject, AppException, PasswordPolicy, ServiceComponent,
+    DDoSRule, NetworkObject, ServiceObject, AppException, PasswordPolicy, ServiceComponent,
 )
 from .importer import import_config_json
 
@@ -105,8 +105,17 @@ def network_objects_view(request):
 
 
 @login_required
+def service_objects_view(request):
+    services = ServiceObject.objects.all()
+    return render(request, 'dashboard/service_objects.html', {
+        'services': services,
+        'page': 'service_objects',
+    })
+
+
+@login_required
 def firewall_rules_view(request):
-    rules = FirewallRule.objects.prefetch_related('source_objects', 'destination_objects').all()
+    rules = FirewallRule.objects.prefetch_related('source_objects', 'destination_objects', 'source_groups', 'destination_groups', 'services').exclude(position=0)
     return render(request, 'dashboard/firewall_rules.html', {
         'rules': rules,
         'page': 'firewall_rules',
@@ -289,8 +298,8 @@ def rule_counters_api(request):
 def maintenance_view(request):
     from .models import (ConfigImport, Gateway, Domain, NetworkInterface,
         StaticRoute, FirewallRule, Certificate, AdminUser, VPNConfig,
-        DDoSProtection, DDoSRule, NetworkObject, AppException,
-        PasswordPolicy, ServiceComponent)
+        DDoSProtection, DDoSRule, NetworkObject, ServiceObject, ObjectGroup,
+        AppException, PasswordPolicy, ServiceComponent)
     counts = {
         'gateways': Gateway.objects.count(),
         'domains': Domain.objects.count(),
@@ -298,6 +307,8 @@ def maintenance_view(request):
         'routes': StaticRoute.objects.count(),
         'firewall_rules': FirewallRule.objects.count(),
         'network_objects': NetworkObject.objects.count(),
+        'service_objects': ServiceObject.objects.count(),
+        'object_groups': ObjectGroup.objects.count(),
         'certificates': Certificate.objects.count(),
         'admins': AdminUser.objects.count(),
         'vpn': VPNConfig.objects.count(),
@@ -321,14 +332,14 @@ def clear_db_view(request):
 
     from .models import (ConfigImport, Gateway, Domain, NetworkInterface,
         StaticRoute, FirewallRule, Certificate, AdminUser, VPNConfig,
-        DDoSProtection, DDoSRule, NetworkObject, AppException,
-        PasswordPolicy, ServiceComponent)
+        DDoSProtection, DDoSRule, NetworkObject, ServiceObject, ObjectGroup,
+        AppException, PasswordPolicy, ServiceComponent)
 
     deleted = 0
-    for model in [FirewallRule, NetworkObject, AppException, DDoSRule,
-                  DDoSProtection, ServiceComponent, Certificate, AdminUser,
-                  VPNConfig, PasswordPolicy, StaticRoute, NetworkInterface,
-                  Domain, Gateway, ConfigImport]:
+    for model in [FirewallRule, NetworkObject, ServiceObject, ObjectGroup,
+                  AppException, DDoSRule, DDoSProtection, ServiceComponent,
+                  Certificate, AdminUser, VPNConfig, PasswordPolicy,
+                  StaticRoute, NetworkInterface, Domain, Gateway, ConfigImport]:
         count, _ = model.objects.all().delete()
         deleted += count
 
