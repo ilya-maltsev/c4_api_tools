@@ -283,3 +283,54 @@ def rule_counters_api(request):
         return JsonResponse({'interval': interval, 'counters': counters})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=502)
+
+
+@login_required
+def maintenance_view(request):
+    from .models import (ConfigImport, Gateway, Domain, NetworkInterface,
+        StaticRoute, FirewallRule, Certificate, AdminUser, VPNConfig,
+        DDoSProtection, DDoSRule, NetworkObject, AppException,
+        PasswordPolicy, ServiceComponent)
+    counts = {
+        'gateways': Gateway.objects.count(),
+        'domains': Domain.objects.count(),
+        'interfaces': NetworkInterface.objects.count(),
+        'routes': StaticRoute.objects.count(),
+        'firewall_rules': FirewallRule.objects.count(),
+        'network_objects': NetworkObject.objects.count(),
+        'certificates': Certificate.objects.count(),
+        'admins': AdminUser.objects.count(),
+        'vpn': VPNConfig.objects.count(),
+        'ddos_rules': DDoSRule.objects.count(),
+        'app_exceptions': AppException.objects.count(),
+        'services': ServiceComponent.objects.count(),
+        'imports': ConfigImport.objects.count(),
+    }
+    total = sum(counts.values())
+    return render(request, 'dashboard/maintenance.html', {
+        'counts': counts,
+        'total': total,
+        'page': 'maintenance',
+    })
+
+
+@login_required
+def clear_db_view(request):
+    if request.method != 'POST':
+        return redirect('maintenance')
+
+    from .models import (ConfigImport, Gateway, Domain, NetworkInterface,
+        StaticRoute, FirewallRule, Certificate, AdminUser, VPNConfig,
+        DDoSProtection, DDoSRule, NetworkObject, AppException,
+        PasswordPolicy, ServiceComponent)
+
+    deleted = 0
+    for model in [FirewallRule, NetworkObject, AppException, DDoSRule,
+                  DDoSProtection, ServiceComponent, Certificate, AdminUser,
+                  VPNConfig, PasswordPolicy, StaticRoute, NetworkInterface,
+                  Domain, Gateway, ConfigImport]:
+        count, _ = model.objects.all().delete()
+        deleted += count
+
+    messages.success(request, f"Database cleared: {deleted} records deleted")
+    return redirect('maintenance')

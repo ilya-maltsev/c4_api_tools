@@ -387,3 +387,21 @@ msgstr "Тип"
 
 msgid "Description"
 msgstr "Описание"
+
+msgid "Maintenance"
+msgstr "Обслуживание"
+
+msgid "Clear dashboard database"
+msgstr "Очистить базу данных панели"
+
+msgid "Delete all imported configuration data. User accounts and Django settings will not be affected."
+msgstr "Удалить все импортированные данные конфигурации. Учетные записи пользователей и настройки Django затронуты не будут."
+
+msgid "Are you sure? All configuration data will be deleted."
+msgstr "Вы уверены? Все данные конфигурации будут удалены."
+
+msgid "Clear database"
+msgstr "Очистить базу данных"
+
+msgid "Database statistics"
+msgstr "Статистика базы данных"

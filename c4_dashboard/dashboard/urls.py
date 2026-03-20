@@ -19,4 +19,6 @@ urlpatterns = [
     path('import/', views.import_config_view, name='import_config'),
     path('sync/', views.sync_from_c4_view, name='sync_from_c4'),
     path('api/rule-counters/', views.rule_counters_api, name='rule_counters_api'),
+    path('system/maintenance/', views.maintenance_view, name='maintenance'),
+    path('system/clear-db/', views.clear_db_view, name='clear_db'),
 ]
