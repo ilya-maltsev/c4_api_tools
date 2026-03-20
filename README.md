@@ -26,10 +26,10 @@
 ## Архитектура dev-окружения
 
 ```
-                nginx :8443 (ГОСТ + RSA)        nginx :8444 (ГОСТ mTLS)
+Браузер ----->  nginx :8443 (ГОСТ + RSA)        nginx :8444 (ГОСТ mTLS)
                        |                               |
-Браузер -----> Dashboard :8000              Exporter API :8001
-                  |                                |
+              Dashboard :8000              Exporter API :8001
+                  |                                 |
                   |--> PostgreSQL :5432             |--> Континент 4 :444
                   |--> cus-logs DB (ids_log)
 ```
