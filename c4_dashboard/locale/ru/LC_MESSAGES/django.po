@@ -403,8 +403,8 @@ msgstr "Вы уверены? Все данные конфигурации буд
 msgid "Clear database"
 msgstr "Очистить базу данных"
 
-msgid "Database statistics"
-msgstr "Статистика базы данных"
+msgid "Dashboard Database statistics"
+msgstr "Статистика базы данных панели"
 
 msgid "Show _MENU_ entries"
 msgstr "Показать _MENU_ записей"
@@ -540,3 +540,33 @@ msgstr "Настроить подключение"
 
 msgid "Save"
 msgstr "Сохранить"
+
+msgid "CUS Log Database info"
+msgstr "Информация о БД логов ЦУС"
+
+msgid "Table"
+msgstr "Таблица"
+
+msgid "Records"
+msgstr "Записи"
+
+msgid "Cleanup"
+msgstr "Очистка"
+
+msgid "older than"
+msgstr "старше"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Delete records older than"
+msgstr "Удалить записи старше"
+
+msgid "from table"
+msgstr "из таблицы"
+
+msgid "Deleted"
+msgstr "Удалено"
+
+msgid "Loading..."
+msgstr "Загрузка..."

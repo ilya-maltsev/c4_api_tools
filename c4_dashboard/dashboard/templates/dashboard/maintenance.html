@@ -48,6 +48,15 @@
     </form>
 </div>
 
+{% if cus_connected %}
+<div class="panel">
+    <div class="panel-header">{% trans "CUS Log Database info" %} <button id="refresh-cus-tables" class="btn btn-default" style="float:right;padding:2px 10px;font-size:11px">{% trans "Refresh" %}</button></div>
+    <div class="panel-body" id="cus-tables-body">
+        <p style="color:var(--fi-text-muted);font-size:13px">{% trans "Loading..." %}</p>
+    </div>
+</div>
+{% endif %}
+
 <div class="import-form">
     <h3 style="margin-bottom:12px">{% trans "Clear dashboard database" %}</h3>
     <p style="margin-bottom:16px;color:var(--fi-text-muted);font-size:13px">{% trans "Delete all imported configuration data. User accounts and Django settings will not be affected." %}</p>
@@ -58,7 +67,7 @@
 </div>
 
 <div class="panel">
-    <div class="panel-header">{% trans "Database statistics" %}</div>
+    <div class="panel-header">{% trans "Dashboard Database statistics" %}</div>
     <div class="panel-body">
         <div class="detail-row"><div class="detail-label">{% trans "Gateway" %}</div><div class="detail-value">{{ counts.gateways }}</div></div>
         <div class="detail-row"><div class="detail-label">{% trans "Domain" %}</div><div class="detail-value">{{ counts.domains }}</div></div>
@@ -95,5 +104,66 @@ $('#test-cus-btn').click(function() {
         $res.html('<span class="badge badge-off">{% trans "Error" %}</span>');
     });
 });
+
+{% if cus_connected %}
+function loadCusTables() {
+    var $body = $('#cus-tables-body');
+    $body.html('<p style="color:var(--fi-text-muted);font-size:13px">{% trans "Loading..." %}</p>');
+    $.getJSON('{% url "cus_db_tables" %}', function(data) {
+        var html = '<table style="width:100%;border-collapse:collapse">';
+        html += '<thead><tr style="background:#e7e7e7">';
+        html += '<th style="padding:6px 12px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--fi-border)">{% trans "Table" %}</th>';
+        html += '<th style="padding:6px 12px;text-align:center;font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--fi-border)">{% trans "Size" %}</th>';
+        html += '<th style="padding:6px 12px;text-align:center;font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--fi-border)">{% trans "Records" %}</th>';
+        html += '<th style="padding:6px 12px;text-align:center;font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--fi-border)">{% trans "Cleanup" %}</th>';
+        html += '</tr></thead><tbody>';
+        data.tables.forEach(function(t) {
+            html += '<tr style="border-bottom:1px solid #eee">';
+            html += '<td style="padding:6px 12px;font-size:13px"><strong>' + t.name + '</strong></td>';
+            html += '<td style="padding:6px 12px;font-size:13px;text-align:center">' + t.size + '</td>';
+            html += '<td style="padding:6px 12px;font-size:13px;text-align:center">' + t.rows.toLocaleString() + '</td>';
+            html += '<td style="padding:6px 12px;text-align:center">';
+            if (t.has_timestamp) {
+                html += '<div style="display:flex;align-items:center;gap:4px;justify-content:center">';
+                html += '<span class="toolbar-label">{% trans "older than" %}</span> ';
+                html += '<input type="number" class="cleanup-days" data-table="' + t.name + '" value="7" min="1" max="365" style="width:50px;padding:2px 4px;border:1px solid var(--fi-border);border-radius:3px;font-size:12px;text-align:center"> ';
+                html += '<span class="toolbar-label">{% trans "days" %}</span> ';
+                html += '<button class="btn btn-default cleanup-btn" data-table="' + t.name + '" style="padding:2px 8px;font-size:11px;background:var(--fi-error);color:#fff;border-color:var(--fi-error)">{% trans "Delete" %}</button>';
+                html += '</div>';
+            } else {
+                html += '<span style="color:var(--fi-text-muted);font-size:11px">—</span>';
+            }
+            html += '</td></tr>';
+        });
+        html += '</tbody></table>';
+        $body.html(html);
+    }).fail(function(xhr) {
+        var msg = xhr.responseJSON ? xhr.responseJSON.error : 'error';
+        $body.html('<p style="color:var(--fi-error)">' + msg + '</p>');
+    });
+}
+
+$(document).on('click', '.cleanup-btn', function() {
+    var table = $(this).data('table');
+    var days = $(this).closest('tr').find('.cleanup-days').val();
+    if (!confirm('{% trans "Delete records older than" %} ' + days + ' {% trans "days" %} {% trans "from table" %} "' + table + '"?')) return;
+
+    var $btn = $(this);
+    $btn.text('...').prop('disabled', true);
+    var csrfToken = '{{ csrf_token }}';
+    $.post('{% url "cus_db_cleanup" %}', {table: table, days: days, csrfmiddlewaretoken: csrfToken}, function(data) {
+        $btn.text('{% trans "Delete" %}').prop('disabled', false);
+        alert('{% trans "Deleted" %}: ' + data.deleted.toLocaleString() + ' {% trans "records" %}');
+        loadCusTables();
+    }, 'json').fail(function(xhr) {
+        $btn.text('{% trans "Delete" %}').prop('disabled', false);
+        var msg = xhr.responseJSON ? xhr.responseJSON.error : 'error';
+        alert('{% trans "Error" %}: ' + msg);
+    });
+});
+
+$('#refresh-cus-tables').click(loadCusTables);
+loadCusTables();
+{% endif %}
 </script>
 {% endblock %}

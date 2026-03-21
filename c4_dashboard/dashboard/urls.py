@@ -26,4 +26,6 @@ urlpatterns = [
     path('system/clear-db/', views.clear_db_view, name='clear_db'),
     path('system/save-cus-db/', views.save_cus_db_view, name='save_cus_db'),
     path('api/test-cus-db/', views.test_cus_db_api, name='test_cus_db'),
+    path('api/cus-db-tables/', views.cus_db_tables_api, name='cus_db_tables'),
+    path('api/cus-db-cleanup/', views.cus_db_cleanup_api, name='cus_db_cleanup'),
 ]

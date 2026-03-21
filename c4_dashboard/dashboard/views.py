@@ -407,6 +407,115 @@ def test_cus_db_api(request):
     return JsonResponse({'connected': ok, 'message': msg})
 
 
+@login_required
+def cus_db_tables_api(request):
+    conn = get_cus_db_connection()
+    if not conn:
+        return JsonResponse({'error': 'not_configured'}, status=503)
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT
+                t.tablename AS name,
+                pg_size_pretty(pg_total_relation_size(quote_ident(t.tablename))) AS size,
+                pg_total_relation_size(quote_ident(t.tablename)) AS size_bytes,
+                COALESCE(s.n_live_tup, 0) AS rows
+            FROM pg_tables t
+            LEFT JOIN pg_stat_user_tables s ON s.relname = t.tablename
+            WHERE t.schemaname = 'public'
+            ORDER BY pg_total_relation_size(quote_ident(t.tablename)) DESC
+        """)
+        tables = []
+        for name, size, size_bytes, rows in cur.fetchall():
+            has_ts = False
+            cur2 = conn.cursor()
+            cur2.execute("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = %s AND column_name = 'timestamp'
+            """, [name])
+            has_ts = cur2.fetchone() is not None
+            cur2.close()
+            tables.append({
+                'name': name,
+                'size': size,
+                'size_bytes': size_bytes,
+                'rows': rows,
+                'has_timestamp': has_ts,
+            })
+        cur.close()
+        conn.close()
+        return JsonResponse({'tables': tables})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)
+
+
+@login_required
+def cus_db_cleanup_api(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    table = request.POST.get('table', '')
+    days = request.POST.get('days', '7')
+
+    try:
+        days = int(days)
+        if days < 1:
+            return JsonResponse({'error': 'days must be >= 1'}, status=400)
+    except ValueError:
+        return JsonResponse({'error': 'invalid days'}, status=400)
+
+    conn = get_cus_db_connection()
+    if not conn:
+        return JsonResponse({'error': 'not_configured'}, status=503)
+
+    try:
+        cur = conn.cursor()
+        # Verify table exists and has timestamp column
+        cur.execute("""
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = %s AND column_name = 'timestamp'
+        """, [table])
+        if not cur.fetchone():
+            cur.close()
+            conn.close()
+            return JsonResponse({'error': f'Table "{table}" not found or has no timestamp column'}, status=404)
+
+        # Delete in batches
+        total_deleted = 0
+        while True:
+            cur.execute(f"""
+                WITH to_delete AS (
+                    SELECT id FROM {table}
+                    WHERE "timestamp" < NOW() - INTERVAL '{days} days'
+                    LIMIT 10000
+                    FOR UPDATE SKIP LOCKED
+                ),
+                deleted AS (
+                    DELETE FROM {table}
+                    WHERE id IN (SELECT id FROM to_delete)
+                    RETURNING 1
+                )
+                SELECT count(*) FROM deleted
+            """)
+            batch = cur.fetchone()[0]
+            conn.commit()
+            if batch == 0:
+                break
+            total_deleted += batch
+
+        # Vacuum
+        old_isolation = conn.isolation_level
+        conn.set_isolation_level(0)
+        cur.execute(f"VACUUM ANALYZE {table}")
+        conn.set_isolation_level(old_isolation)
+
+        cur.close()
+        conn.close()
+        return JsonResponse({'deleted': total_deleted, 'table': table, 'days': days})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)
+
+
 LOG_TABLES = {
     'log': {
         'columns': ['id', 'timestamp', 'syslogseverity', 'hostname', 'sourcename', 'message'],
