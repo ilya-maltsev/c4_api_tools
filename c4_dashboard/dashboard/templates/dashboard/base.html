@@ -136,12 +136,22 @@
                     }
                 });
 
-                // Per-column filter
+                // Per-column filter (supports comma-separated OR: "HTTP,DNS")
                 $filterRow.find('.col-filter-input').each(function(i) {
                     $(this).on('keyup change', function() {
+                        var val = this.value.trim();
+                        var regex = '';
+                        if (val.indexOf(',') >= 0) {
+                            var parts = val.split(',').map(function(s) {
+                                return s.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            }).filter(function(s) { return s.length > 0; });
+                            regex = parts.join('|');
+                        } else {
+                            regex = val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        }
                         var col = dt.column(i);
-                        if (col.search() !== this.value) {
-                            col.search(this.value).draw();
+                        if (col.search() !== regex) {
+                            col.search(regex, true, false).draw();
                         }
                     });
                 });

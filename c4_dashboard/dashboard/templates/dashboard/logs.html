@@ -52,6 +52,29 @@
 
 {% block scripts %}
 <script>
+// CIDR subnet matching
+var ipColumns = {'src_ip': true, 'dest_ip': true};
+var currentCols = [];
+
+function ip2int(ip) {
+    var parts = ip.replace(/\/.*/, '').split('.');
+    if (parts.length !== 4) return null;
+    return ((parseInt(parts[0]) << 24) | (parseInt(parts[1]) << 16) |
+            (parseInt(parts[2]) << 8) | parseInt(parts[3])) >>> 0;
+}
+
+function cidrMatch(ip, cidr) {
+    var slash = cidr.indexOf('/');
+    if (slash < 0) return false;
+    var mask = parseInt(cidr.substring(slash + 1));
+    if (isNaN(mask) || mask < 0 || mask > 32) return false;
+    var netInt = ip2int(cidr);
+    var ipInt = ip2int(ip);
+    if (netInt === null || ipInt === null) return false;
+    var bitmask = mask === 0 ? 0 : (0xFFFFFFFF << (32 - mask)) >>> 0;
+    return (ipInt & bitmask) === (netInt & bitmask);
+}
+
 var logDt = null;
 
 var columnNames = {
@@ -98,7 +121,8 @@ function fetchLogs() {
         var $filterRow = $('<tr class="col-filter-row"></tr>');
         cols.forEach(function(c) {
             $thead.append('<th>' + (columnNames[c] || c) + '</th>');
-            $filterRow.append('<th><div class="col-filter-wrap"><input type="text" class="col-filter-input" placeholder="&#9660;"></div></th>');
+            var ph = ipColumns[c] ? 'ip or x.x.x.x/0-32' : '\u25BC';
+            $filterRow.append('<th><div class="col-filter-wrap"><input type="text" class="col-filter-input" placeholder="' + ph + '"></div></th>');
         });
 
         // Build rows
@@ -136,12 +160,34 @@ function fetchLogs() {
             }
         });
 
-        // Per-column filter
+        // Store current columns for CIDR filter
+        currentCols = cols;
+
+        // Per-column filter (comma = OR, CIDR subnet for IP columns)
         $filterRow.find('.col-filter-input').each(function(i) {
             $(this).on('keyup change', function() {
-                var col = logDt.column(i);
-                if (col.search() !== this.value) {
-                    col.search(this.value).draw();
+                var val = this.value.trim();
+                var colName = currentCols[i];
+                var hasCidr = ipColumns[colName] && /\/([0-9]|[12]\d|3[0-2])(\s*,|$)/.test(val);
+
+                if (hasCidr) {
+                    // CIDR handled by custom search plugin, clear built-in
+                    logDt.column(i).search('');
+                    logDt.draw();
+                } else {
+                    var regex = '';
+                    if (val.indexOf(',') >= 0) {
+                        var parts = val.split(',').map(function(s) {
+                            return s.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        }).filter(function(s) { return s.length > 0; });
+                        regex = parts.join('|');
+                    } else {
+                        regex = val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    }
+                    var col = logDt.column(i);
+                    if (col.search() !== regex) {
+                        col.search(regex, true, false).draw();
+                    }
                 }
             });
         });
@@ -165,6 +211,28 @@ function startLogAuto() {
         logAutoTimer = null;
     }
 }
+
+// Custom DataTables search: CIDR subnet filter for IP columns
+// Supports comma-separated CIDRs: "10.0.0.0/8,192.168.0.0/16" (OR)
+$.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+    if (!logDt || settings.nTable.id !== 'log-table-view') return true;
+    var $filters = $('.col-filter-row .col-filter-input');
+    for (var i = 0; i < currentCols.length; i++) {
+        var colName = currentCols[i];
+        if (!ipColumns[colName]) continue;
+        var val = ($filters.eq(i).val() || '').trim();
+        if (!val || !/\/([0-9]|[12]\d|3[0-2])(\s*,|$)/.test(val)) continue;
+        var cellIp = data[i];
+        if (!cellIp) return false;
+        var cidrs = val.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return /\/([0-9]|[12]\d|3[0-2])$/.test(s); });
+        var matched = false;
+        for (var j = 0; j < cidrs.length; j++) {
+            if (cidrMatch(cellIp, cidrs[j])) { matched = true; break; }
+        }
+        if (!matched) return false;
+    }
+    return true;
+});
 
 $('#log-refresh').click(fetchLogs);
 $('#log-table, #log-interval, #log-limit').change(fetchLogs);
