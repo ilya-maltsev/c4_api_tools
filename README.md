@@ -10,9 +10,21 @@
 |---|---|
 | ![Login](c4_dash-demo/1.png) | ![Dashboard](c4_dash-demo/2.png) |
 
-| Сетевые интерфейсы | Статические маршруты | Сертификаты |
-|---|---|---|
-| ![Interfaces](c4_dash-demo/3.png) | ![Routes](c4_dash-demo/4.png) | ![Certificates](c4_dash-demo/5.png) |
+| Журналы ЦУС | Сетевые интерфейсы |
+|---|---|
+| ![Logs](c4_dash-demo/3.png) | ![Interfaces](c4_dash-demo/4.png) |
+
+| Правила МЭ (источники, назначения, сервисы, счетчик) | Сетевые объекты |
+|---|---|
+| ![Firewall Rules](c4_dash-demo/5.png) | ![Network Objects](c4_dash-demo/6.png) |
+
+| Объекты сервисов | Импорт конфигурации |
+|---|---|
+| ![Service Objects](c4_dash-demo/7.png) | ![Import](c4_dash-demo/8.png) |
+
+| Обслуживание (БД логов ЦУС, статистика) |
+|---|
+| ![Maintenance](c4_dash-demo/9.png) |
 
 ## Состав
 
