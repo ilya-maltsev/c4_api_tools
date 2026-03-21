@@ -447,3 +447,96 @@ msgstr "Порт назначения"
 
 msgid "Source Port"
 msgstr "Порт источника"
+
+msgid "Logs"
+msgstr "Журналы"
+
+msgid "Log type"
+msgstr "Тип журнала"
+
+msgid "System Log"
+msgstr "Системный журнал"
+
+msgid "Management Log"
+msgstr "Журнал управления"
+
+msgid "IDS / Firewall Log"
+msgstr "Журнал IDS / МЭ"
+
+msgid "Interval"
+msgstr "Интервал"
+
+msgid "Limit"
+msgstr "Лимит"
+
+msgid "Timestamp"
+msgstr "Время"
+
+msgid "Severity"
+msgstr "Критичность"
+
+msgid "Hostname"
+msgstr "Узел"
+
+msgid "Message"
+msgstr "Сообщение"
+
+msgid "Category"
+msgstr "Категория"
+
+msgid "Event"
+msgstr "Событие"
+
+msgid "Source IP"
+msgstr "IP источника"
+
+msgid "Dest IP"
+msgstr "IP назначения"
+
+msgid "Signature"
+msgstr "Сигнатура"
+
+msgid "Rule"
+msgstr "Правило"
+
+msgid "records"
+msgstr "записей"
+
+msgid "CUS Log Database"
+msgstr "БД логов ЦУС"
+
+msgid "Connected"
+msgstr "Подключено"
+
+msgid "Not configured"
+msgstr "Не настроено"
+
+msgid "Connection to external CUS database with logs (ids_log, log, management_log)."
+msgstr "Подключение к внешней БД ЦУС с журналами (ids_log, log, management_log)."
+
+msgid "Host"
+msgstr "Хост"
+
+msgid "Database"
+msgstr "База данных"
+
+msgid "User"
+msgstr "Пользователь"
+
+msgid "Test connection"
+msgstr "Проверить подключение"
+
+msgid "CUS log database is not connected."
+msgstr "БД логов ЦУС не подключена."
+
+msgid "Counter is unavailable."
+msgstr "Счетчик недоступен."
+
+msgid "Logs are unavailable."
+msgstr "Журналы недоступны."
+
+msgid "Configure connection"
+msgstr "Настроить подключение"
+
+msgid "Save"
+msgstr "Сохранить"

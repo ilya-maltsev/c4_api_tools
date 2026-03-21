@@ -3,6 +3,51 @@
 {% block title %}{% trans "Maintenance" %} - {% trans "Continent 4" %}{% endblock %}
 {% block page_title %}{% trans "Maintenance" %}{% endblock %}
 {% block content %}
+
+<div class="import-form">
+    <h3 style="margin-bottom:8px">
+        {% trans "CUS Log Database" %}
+        {% if cus_connected %}
+        <span class="badge badge-on" style="font-size:11px;vertical-align:middle">{% trans "Connected" %}</span>
+        {% elif cus_db.host %}
+        <span class="badge badge-off" style="font-size:11px;vertical-align:middle">{% trans "Error" %}</span>
+        {% else %}
+        <span class="badge badge-warn" style="font-size:11px;vertical-align:middle">{% trans "Not configured" %}</span>
+        {% endif %}
+    </h3>
+    <p style="margin-bottom:14px;color:var(--fi-text-muted);font-size:13px">{% trans "Connection to external CUS database with logs (ids_log, log, management_log)." %}</p>
+    <form method="post" action="{% url 'save_cus_db' %}" id="cus-db-form">
+        {% csrf_token %}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;max-width:500px;margin-bottom:14px">
+            <div>
+                <label class="toolbar-label" style="display:block;margin-bottom:2px">{% trans "Host" %}</label>
+                <input type="text" name="host" value="{{ cus_db.host }}" placeholder="192.168.122.200" style="width:100%;padding:4px 8px;border:1px solid var(--fi-border);border-radius:3px;font-size:13px">
+            </div>
+            <div>
+                <label class="toolbar-label" style="display:block;margin-bottom:2px">{% trans "Port" %}</label>
+                <input type="text" name="port" value="{{ cus_db.port }}" placeholder="5432" style="width:100%;padding:4px 8px;border:1px solid var(--fi-border);border-radius:3px;font-size:13px">
+            </div>
+            <div>
+                <label class="toolbar-label" style="display:block;margin-bottom:2px">{% trans "Database" %}</label>
+                <input type="text" name="dbname" value="{{ cus_db.dbname }}" placeholder="cus-logs" style="width:100%;padding:4px 8px;border:1px solid var(--fi-border);border-radius:3px;font-size:13px">
+            </div>
+            <div>
+                <label class="toolbar-label" style="display:block;margin-bottom:2px">{% trans "User" %}</label>
+                <input type="text" name="user" value="{{ cus_db.user }}" placeholder="monitoring" style="width:100%;padding:4px 8px;border:1px solid var(--fi-border);border-radius:3px;font-size:13px">
+            </div>
+            <div style="grid-column:span 2">
+                <label class="toolbar-label" style="display:block;margin-bottom:2px">{% trans "Password" %}</label>
+                <input type="password" name="password" value="{{ cus_db.password }}" style="width:100%;padding:4px 8px;border:1px solid var(--fi-border);border-radius:3px;font-size:13px">
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+            <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+            <button type="button" id="test-cus-btn" class="btn btn-default">{% trans "Test connection" %}</button>
+            <span id="test-cus-result" style="font-size:12px"></span>
+        </div>
+    </form>
+</div>
+
 <div class="import-form">
     <h3 style="margin-bottom:12px">{% trans "Clear dashboard database" %}</h3>
     <p style="margin-bottom:16px;color:var(--fi-text-muted);font-size:13px">{% trans "Delete all imported configuration data. User accounts and Django settings will not be affected." %}</p>
@@ -33,4 +78,22 @@
         <div class="detail-row" style="border-top:2px solid var(--fi-border);font-weight:700"><div class="detail-label">{% trans "Total" %}</div><div class="detail-value">{{ total }}</div></div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$('#test-cus-btn').click(function() {
+    var $res = $('#test-cus-result');
+    $res.text('...');
+    $.getJSON('{% url "test_cus_db" %}', function(data) {
+        if (data.connected) {
+            $res.html('<span class="badge badge-on">{% trans "Connected" %}</span>');
+        } else {
+            $res.html('<span class="badge badge-off">' + data.message + '</span>');
+        }
+    }).fail(function() {
+        $res.html('<span class="badge badge-off">{% trans "Error" %}</span>');
+    });
+});
+</script>
 {% endblock %}

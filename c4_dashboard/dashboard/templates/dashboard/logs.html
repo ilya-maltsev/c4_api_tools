@@ -1,0 +1,176 @@
+{% extends "dashboard/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Logs" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "Logs" %}{% endblock %}
+{% block content %}
+{% if not cus_connected %}
+<div class="msg msg-error" style="margin-bottom:12px;font-size:13px">
+    {% trans "CUS log database is not connected." %}
+    {% if cus_status == 'not_configured' %}{% trans "Logs are unavailable." %}{% endif %}
+    <a href="{% url 'maintenance' %}" style="color:var(--fi-link);font-weight:600">{% trans "Configure connection" %}</a>
+</div>
+{% endif %}
+<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span class="toolbar-label">{% trans "Log type" %}:</span>
+    <select id="log-table" class="toolbar-select">
+        <option value="log">{% trans "System Log" %}</option>
+        <option value="management_log">{% trans "Management Log" %}</option>
+        <option value="ids_log">{% trans "IDS / Firewall Log" %}</option>
+    </select>
+    <span class="toolbar-label">{% trans "Interval" %}:</span>
+    <select id="log-interval" class="toolbar-select">
+        <option value="5m">{% trans "5 minutes" %}</option>
+        <option value="1h" selected>{% trans "1 hour" %}</option>
+        <option value="1d">{% trans "1 day" %}</option>
+        <option value="1w">{% trans "1 week" %}</option>
+    </select>
+    <span class="toolbar-label">{% trans "Limit" %}:</span>
+    <select id="log-limit" class="toolbar-select">
+        <option value="50">50</option>
+        <option value="100" selected>100</option>
+        <option value="500">500</option>
+        <option value="1000">1000</option>
+    </select>
+    <button id="log-refresh" class="btn btn-primary" style="padding:3px 12px;font-size:12px">{% trans "Refresh" %}</button>
+    <label class="toolbar-label" style="display:flex;align-items:center;gap:3px;cursor:pointer">
+        <input type="checkbox" id="log-auto" class="toolbar-checkbox"> {% trans "Auto-update" %}
+    </label>
+    <select id="log-auto-interval" class="toolbar-select">
+        <option value="60000">{% trans "every 1 min" %}</option>
+        <option value="300000" selected>{% trans "every 5 min" %}</option>
+    </select>
+    <span id="log-status" style="font-size:12px;color:#95a5a6"></span>
+</div>
+
+<div class="table-wrap">
+    <table id="log-table-view" class="display" style="width:100%">
+        <thead><tr id="log-thead"></tr></thead>
+        <tbody id="log-tbody"></tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var logDt = null;
+
+var columnNames = {
+    'id': 'ID',
+    'timestamp': '{% trans "Timestamp" %}',
+    'syslogseverity': '{% trans "Severity" %}',
+    'hostname': '{% trans "Hostname" %}',
+    'sourcename': '{% trans "Source" %}',
+    'message': '{% trans "Message" %}',
+    'category': '{% trans "Category" %}',
+    'subject': '{% trans "Subject" %}',
+    'action': '{% trans "Action" %}',
+    'event_type': '{% trans "Event" %}',
+    'src_ip': '{% trans "Source IP" %}',
+    'dest_ip': '{% trans "Dest IP" %}',
+    'proto': '{% trans "Protocol" %}',
+    'signature': '{% trans "Signature" %}',
+    'rule_name': '{% trans "Rule" %}'
+};
+
+var severityBadge = {
+    'error': 'badge-off',
+    'warning': 'badge-warn',
+    'notice': 'badge-info',
+    'info': 'badge-on'
+};
+
+function fetchLogs() {
+    var table = $('#log-table').val();
+    var interval = $('#log-interval').val();
+    var limit = $('#log-limit').val();
+    $('#log-status').text('...');
+
+    $.getJSON('{% url "logs_api" %}', {table: table, interval: interval, limit: limit}, function(data) {
+        // Destroy existing DataTable
+        if (logDt) { logDt.destroy(); logDt = null; }
+        $('.col-filter-row').remove();
+
+        var cols = data.columns;
+        var $thead = $('#log-thead').empty();
+        var $tbody = $('#log-tbody').empty();
+
+        // Build header + filter row
+        var $filterRow = $('<tr class="col-filter-row"></tr>');
+        cols.forEach(function(c) {
+            $thead.append('<th>' + (columnNames[c] || c) + '</th>');
+            $filterRow.append('<th><div class="col-filter-wrap"><input type="text" class="col-filter-input" placeholder="&#9660;"></div></th>');
+        });
+
+        // Build rows
+        data.records.forEach(function(rec) {
+            var $tr = $('<tr>');
+            cols.forEach(function(c) {
+                var val = rec[c] || '';
+                if (c === 'syslogseverity' && val) {
+                    var cls = severityBadge[val] || 'badge-info';
+                    val = '<span class="badge ' + cls + '">' + val + '</span>';
+                }
+                if (c === 'timestamp' && val.length > 19) {
+                    val = val.substring(0, 19);
+                }
+                $tr.append('<td>' + val + '</td>');
+            });
+            $tbody.append($tr);
+        });
+
+        // Add filter row after header
+        $thead.after($filterRow);
+
+        // Init DataTable
+        logDt = $('#log-table-view').DataTable({
+            pageLength: 25,
+            order: [],
+            orderCellsTop: true,
+            language: {
+                search: "{% trans 'Filter:' %}",
+                lengthMenu: "{% trans 'Show _MENU_ entries' %}",
+                info: "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
+                infoEmpty: "{% trans 'No entries' %}",
+                zeroRecords: "{% trans 'No matching records found' %}",
+                paginate: { previous: "{% trans 'Previous' %}", next: "{% trans 'Next' %}" }
+            }
+        });
+
+        // Per-column filter
+        $filterRow.find('.col-filter-input').each(function(i) {
+            $(this).on('keyup change', function() {
+                var col = logDt.column(i);
+                if (col.search() !== this.value) {
+                    col.search(this.value).draw();
+                }
+            });
+        });
+
+        $('#log-status').text(data.count + ' {% trans "records" %} | ' + new Date().toLocaleTimeString());
+    }).fail(function(xhr) {
+        var msg = xhr.responseJSON ? xhr.responseJSON.error : 'error';
+        $('#log-status').html('<span style="color:var(--fi-error)">' + msg + '</span>');
+    });
+}
+
+var logAutoTimer = null;
+
+function startLogAuto() {
+    clearInterval(logAutoTimer);
+    if ($('#log-auto').is(':checked')) {
+        var ms = parseInt($('#log-auto-interval').val());
+        fetchLogs();
+        logAutoTimer = setInterval(fetchLogs, ms);
+    } else {
+        logAutoTimer = null;
+    }
+}
+
+$('#log-refresh').click(fetchLogs);
+$('#log-table, #log-interval, #log-limit').change(fetchLogs);
+$('#log-auto').change(startLogAuto);
+$('#log-auto-interval').change(startLogAuto);
+
+fetchLogs();
+</script>
+{% endblock %}

@@ -16,6 +16,9 @@
         <a href="{% url 'dashboard' %}" class="{% if page == 'dashboard' %}active{% endif %}">
             <span class="icon">&#9679;</span> {% trans "Dashboard" %}
         </a>
+        <a href="{% url 'logs' %}" class="{% if page == 'logs' %}active{% endif %}">
+            <span class="icon">&#9776;</span> {% trans "Logs" %}
+        </a>
 
         <div class="sidebar-section">{% trans "Network" %}</div>
         <a href="{% url 'interfaces' %}" class="{% if page == 'interfaces' %}active{% endif %}">

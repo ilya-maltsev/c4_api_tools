@@ -1,6 +1,31 @@
 from django.db import models
 
 
+class CusDbSettings(models.Model):
+    host = models.CharField(max_length=255, blank=True)
+    port = models.CharField(max_length=10, default='5432')
+    dbname = models.CharField(max_length=128, default='cus-logs')
+    user = models.CharField(max_length=128, default='monitoring')
+    password = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        verbose_name = 'CUS Database Settings'
+
+    def __str__(self):
+        return f"{self.user}@{self.host}:{self.port}/{self.dbname}"
+
+    @classmethod
+    def get(cls):
+        return cls.objects.first()
+
+    @classmethod
+    def get_or_empty(cls):
+        obj = cls.objects.first()
+        if obj:
+            return obj
+        return cls(host='', port='5432', dbname='cus-logs', user='monitoring', password='')
+
+
 class ConfigImport(models.Model):
     imported_at = models.DateTimeField(auto_now_add=True)
     source_file = models.CharField(max_length=512)

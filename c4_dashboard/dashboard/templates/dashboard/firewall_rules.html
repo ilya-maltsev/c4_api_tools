@@ -3,6 +3,13 @@
 {% block title %}{% trans "Firewall Rules" %} - {% trans "Continent 4" %}{% endblock %}
 {% block page_title %}{% trans "Firewall Rules" %}{% endblock %}
 {% block content %}
+{% if not cus_connected %}
+<div class="msg msg-error" style="margin-bottom:12px;font-size:13px">
+    {% trans "CUS log database is not connected." %}
+    {% if cus_status == 'not_configured' %}{% trans "Counter is unavailable." %}{% endif %}
+    <a href="{% url 'maintenance' %}" style="color:var(--fi-link);font-weight:600">{% trans "Configure connection" %}</a>
+</div>
+{% endif %}
 <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <span class="toolbar-label">{% trans "Counter interval" %}:</span>
     <select id="counter-interval" class="toolbar-select">

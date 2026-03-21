@@ -20,6 +20,10 @@ urlpatterns = [
     path('import/', views.import_config_view, name='import_config'),
     path('sync/', views.sync_from_c4_view, name='sync_from_c4'),
     path('api/rule-counters/', views.rule_counters_api, name='rule_counters_api'),
+    path('api/logs/', views.logs_api, name='logs_api'),
+    path('monitor/logs/', views.logs_view, name='logs'),
     path('system/maintenance/', views.maintenance_view, name='maintenance'),
     path('system/clear-db/', views.clear_db_view, name='clear_db'),
+    path('system/save-cus-db/', views.save_cus_db_view, name='save_cus_db'),
+    path('api/test-cus-db/', views.test_cus_db_api, name='test_cus_db'),
 ]

@@ -13,7 +13,8 @@ from django.http import JsonResponse
 from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
-    DDoSRule, NetworkObject, ServiceObject, AppException, PasswordPolicy, ServiceComponent,
+    DDoSRule, NetworkObject, ServiceObject, AppException, PasswordPolicy,
+    ServiceComponent, CusDbSettings,
 )
 from .importer import import_config_json
 
@@ -116,8 +117,11 @@ def service_objects_view(request):
 @login_required
 def firewall_rules_view(request):
     rules = FirewallRule.objects.prefetch_related('source_objects', 'destination_objects', 'source_groups', 'destination_groups', 'services').exclude(position=0)
+    cus_ok, cus_msg = test_cus_db_connection()
     return render(request, 'dashboard/firewall_rules.html', {
         'rules': rules,
+        'cus_connected': cus_ok,
+        'cus_status': cus_msg,
         'page': 'firewall_rules',
     })
 
@@ -252,26 +256,54 @@ INTERVAL_MAP = {
 }
 
 
+def get_cus_db_connection():
+    cfg = CusDbSettings.get()
+    if not cfg or not cfg.host:
+        return None
+    return psycopg2.connect(
+        host=cfg.host,
+        port=cfg.port,
+        dbname=cfg.dbname,
+        user=cfg.user,
+        password=cfg.password,
+        connect_timeout=5,
+    )
+
+
+def test_cus_db_connection():
+    try:
+        conn = get_cus_db_connection()
+        if not conn:
+            return False, 'not_configured'
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.close()
+        conn.close()
+        return True, 'ok'
+    except Exception as e:
+        return False, str(e)
+
+
 @login_required
 def rule_counters_api(request):
     interval = request.GET.get('interval', '1h')
     if interval not in INTERVAL_MAP:
         return JsonResponse({'error': 'invalid interval'}, status=400)
 
-    db_host = settings.C4_MONITOR_DB_HOST
-    if not db_host:
+    conn = get_cus_db_connection()
+    if not conn:
         return JsonResponse({'error': 'C4_MONITOR_DB_HOST not configured'}, status=503)
 
     try:
-        conn = psycopg2.connect(
-            host=db_host,
-            port=settings.C4_MONITOR_DB_PORT,
-            dbname=settings.C4_MONITOR_DB_NAME,
-            user=settings.C4_MONITOR_DB_USER,
-            password=settings.C4_MONITOR_DB_PASSWORD,
-            connect_timeout=5,
-        )
         cur = conn.cursor()
+        cur.execute("""
+            SELECT 1 FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name = 'ids_log'
+        """)
+        if not cur.fetchone():
+            cur.close()
+            conn.close()
+            return JsonResponse({'error': 'Table "ids_log" not found in CUS database'}, status=404)
         cur.execute(f"""
             SELECT signature_id, rule_name, COUNT(*) as cnt
             FROM ids_log
@@ -318,9 +350,14 @@ def maintenance_view(request):
         'imports': ConfigImport.objects.count(),
     }
     total = sum(counts.values())
+    cus_db = CusDbSettings.get_or_empty()
+    cus_ok, cus_msg = test_cus_db_connection()
     return render(request, 'dashboard/maintenance.html', {
         'counts': counts,
         'total': total,
+        'cus_db': cus_db,
+        'cus_connected': cus_ok,
+        'cus_status': cus_msg,
         'page': 'maintenance',
     })
 
@@ -345,3 +382,121 @@ def clear_db_view(request):
 
     messages.success(request, f"Database cleared: {deleted} records deleted")
     return redirect('maintenance')
+
+
+@login_required
+def save_cus_db_view(request):
+    if request.method != 'POST':
+        return redirect('maintenance')
+    obj = CusDbSettings.get()
+    if not obj:
+        obj = CusDbSettings()
+    obj.host = request.POST.get('host', '').strip()
+    obj.port = request.POST.get('port', '5432').strip()
+    obj.dbname = request.POST.get('dbname', 'cus-logs').strip()
+    obj.user = request.POST.get('user', 'monitoring').strip()
+    obj.password = request.POST.get('password', '').strip()
+    obj.save()
+    messages.success(request, f"CUS database settings saved: {obj}")
+    return redirect('maintenance')
+
+
+@login_required
+def test_cus_db_api(request):
+    ok, msg = test_cus_db_connection()
+    return JsonResponse({'connected': ok, 'message': msg})
+
+
+LOG_TABLES = {
+    'log': {
+        'columns': ['id', 'timestamp', 'syslogseverity', 'hostname', 'sourcename', 'message'],
+        'order': '"timestamp" DESC',
+    },
+    'management_log': {
+        'columns': ['id', 'timestamp', 'syslogseverity', 'hostname', 'category', 'subject', 'action'],
+        'order': '"timestamp" DESC',
+    },
+    'ids_log': {
+        'columns': ['id', 'timestamp', 'event_type', 'src_ip', 'dest_ip', 'proto', 'action', 'signature', 'rule_name', 'hostname'],
+        'order': '"timestamp" DESC',
+    },
+}
+
+
+@login_required
+def logs_view(request):
+    cus_ok, cus_msg = test_cus_db_connection()
+    return render(request, 'dashboard/logs.html', {
+        'cus_connected': cus_ok,
+        'cus_status': cus_msg,
+        'page': 'logs',
+    })
+
+
+@login_required
+def logs_api(request):
+    table = request.GET.get('table', 'log')
+    if table not in LOG_TABLES:
+        return JsonResponse({'error': 'invalid table'}, status=400)
+
+    limit = min(int(request.GET.get('limit', 100)), 1000)
+    interval = request.GET.get('interval', '1h')
+    if interval not in INTERVAL_MAP:
+        return JsonResponse({'error': 'invalid interval'}, status=400)
+
+    conn = get_cus_db_connection()
+    if not conn:
+        return JsonResponse({'error': 'C4_MONITOR_DB_HOST not configured'}, status=503)
+
+    try:
+        cur = conn.cursor()
+
+        # Check if table exists
+        cur.execute("""
+            SELECT 1 FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name = %s
+        """, [table])
+        if not cur.fetchone():
+            cur.close()
+            conn.close()
+            return JsonResponse({'error': f'Table "{table}" does not exist in CUS database'}, status=404)
+
+        # Get actual columns in the table
+        cur.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = %s
+            ORDER BY ordinal_position
+        """, [table])
+        existing_cols = {row[0] for row in cur.fetchall()}
+
+        # Use only columns that exist
+        cfg = LOG_TABLES[table]
+        cols = [c for c in cfg['columns'] if c in existing_cols]
+        if not cols:
+            cols = sorted(existing_cols)
+
+        cols_sql = ', '.join(f'"{c}"' for c in cols)
+        order_col = '"timestamp"' if 'timestamp' in existing_cols else f'"{cols[0]}"'
+        where = f'WHERE "timestamp" > {INTERVAL_MAP[interval]}' if 'timestamp' in existing_cols else ''
+        cur.execute(f"SELECT {cols_sql} FROM {table} {where} ORDER BY {order_col} DESC LIMIT {limit}")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        records = []
+        for row in rows:
+            record = {}
+            for i, col in enumerate(cols):
+                val = row[i]
+                record[col] = str(val) if val is not None else ''
+            records.append(record)
+
+        return JsonResponse({
+            'table': table,
+            'interval': interval,
+            'columns': cols,
+            'records': records,
+            'count': len(records),
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)
