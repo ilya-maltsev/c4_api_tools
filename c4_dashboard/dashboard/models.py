@@ -153,6 +153,22 @@ class ObjectGroup(models.Model):
         return self.name
 
 
+class Application(models.Model):
+    uuid = models.UUIDField(primary_key=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    category = models.CharField(max_length=128, blank=True)
+    domain_level = models.IntegerField(default=0)
+    lastmodified = models.BigIntegerField(default=0)
+    config_import = models.ForeignKey(ConfigImport, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class FirewallRule(models.Model):
     uuid = models.UUIDField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -170,6 +186,8 @@ class FirewallRule(models.Model):
     source_groups = models.ManyToManyField(ObjectGroup, blank=True, related_name='fw_rules_as_src')
     destination_groups = models.ManyToManyField(ObjectGroup, blank=True, related_name='fw_rules_as_dst')
     services = models.ManyToManyField(ServiceObject, blank=True, related_name='fw_rules')
+    applications = models.ManyToManyField(Application, blank=True, related_name='fw_rules')
+    install_on = models.ManyToManyField('Gateway', blank=True, related_name='fw_rules_installed')
     domain_level = models.IntegerField(default=0)
     lastmodified = models.BigIntegerField(default=0)
     config_import = models.ForeignKey(ConfigImport, on_delete=models.CASCADE, null=True)
@@ -194,6 +212,11 @@ class FirewallRule(models.Model):
     def service_display(self):
         svcs = self.services.all()
         return ', '.join(s.name for s in svcs) if svcs else 'any'
+
+    @property
+    def install_on_display(self):
+        gws = self.install_on.all()
+        return list(gws) if gws.exists() else []
 
 
 class Certificate(models.Model):

@@ -14,7 +14,7 @@ from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
     DDoSRule, NetworkObject, ServiceObject, AppException, PasswordPolicy,
-    ServiceComponent, CusDbSettings,
+    ServiceComponent, CusDbSettings, Application,
 )
 from .importer import import_config_json
 
@@ -111,6 +111,15 @@ def service_objects_view(request):
     return render(request, 'dashboard/service_objects.html', {
         'services': services,
         'page': 'service_objects',
+    })
+
+
+@login_required
+def applications_view(request):
+    apps = Application.objects.all()
+    return render(request, 'dashboard/applications.html', {
+        'applications': apps,
+        'page': 'applications',
     })
 
 

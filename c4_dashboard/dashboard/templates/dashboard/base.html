@@ -38,6 +38,9 @@
         <a href="{% url 'service_objects' %}" class="{% if page == 'service_objects' %}active{% endif %}">
             <span class="icon">&#9881;</span> {% trans "Service Objects" %}
         </a>
+        <a href="{% url 'applications' %}" class="{% if page == 'applications' %}active{% endif %}">
+            <span class="icon">&#9851;</span> {% trans "Applications" %}
+        </a>
 
         <div class="sidebar-section">{% trans "Security" %}</div>
         <a href="{% url 'certificates' %}" class="{% if page == 'certificates' %}active{% endif %}">

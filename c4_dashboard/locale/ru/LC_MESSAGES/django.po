@@ -636,3 +636,15 @@ msgstr "Экспорт завершен успешно"
 
 msgid "Export failed"
 msgstr "Ошибка экспорта"
+
+msgid "Application"
+msgstr "Приложение"
+
+msgid "Applications"
+msgstr "Приложения"
+
+msgid "Install on"
+msgstr "Установить на"
+
+msgid "Everywhere"
+msgstr "Везде"

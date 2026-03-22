@@ -33,26 +33,30 @@
 <div class="table-wrap">
     <table class="datatable" id="fw-table">
         <thead><tr>
-            <th>#</th>
+            <th style="width:30px">#</th>
             <th>{% trans "Name" %}</th>
             <th>{% trans "Source" %}</th>
             <th>{% trans "Destination" %}</th>
             <th>{% trans "Service" %}</th>
-            <th>{% trans "Action" %}</th>
-            <th>{% trans "Counter" %}</th>
-            <th>{% trans "Logging" %}</th>
+            <th>{% trans "Application" %}</th>
+            <th style="width:50px">{% trans "Action" %}</th>
+            <th style="width:50px">{% trans "Counter" %}</th>
+            <th style="width:50px">{% trans "Logging" %}</th>
+            <th>{% trans "Install on" %}</th>
         </tr></thead>
         <tbody>
         {% for rule in rules %}
         <tr>
             <td>{{ rule.position }}</td>
             <td><strong>{{ rule.name }}</strong></td>
-            <td class="obj-cell">{% if rule.is_inverse_src %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.source_display_list %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype|default:'group' }}" data-ip="{{ obj.ip|default:'' }}">{{ obj.name }}</span>{% empty %}<span class="obj-any">any</span>{% endfor %}</td>
-            <td class="obj-cell">{% if rule.is_inverse_dst %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.destination_display_list %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype|default:'group' }}" data-ip="{{ obj.ip|default:'' }}">{{ obj.name }}</span>{% empty %}<span class="obj-any">any</span>{% endfor %}</td>
-            <td class="obj-cell">{% for svc in rule.services.all %}<span class="obj-chip svc-chip" data-name="{{ svc.name }}" data-type="{{ svc.proto_display }}" data-ip="{{ svc.dst_port }}">{{ svc.name }}</span>{% empty %}<span class="obj-any">any</span>{% endfor %}</td>
+            <td class="obj-cell">{% if rule.is_inverse_src %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.source_display_list %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype|default:'group' }}" data-ip="{{ obj.ip|default:'' }}">{{ obj.name }}</span>{% empty %}<span class="obj-chip">any</span>{% endfor %}</td>
+            <td class="obj-cell">{% if rule.is_inverse_dst %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.destination_display_list %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype|default:'group' }}" data-ip="{{ obj.ip|default:'' }}">{{ obj.name }}</span>{% empty %}<span class="obj-chip">any</span>{% endfor %}</td>
+            <td class="obj-cell">{% for svc in rule.services.all %}<span class="obj-chip svc-chip" data-name="{{ svc.name }}" data-type="{{ svc.proto_display }}" data-ip="{{ svc.dst_port }}">{{ svc.name }}</span>{% empty %}<span class="obj-chip">any</span>{% endfor %}</td>
+            <td class="obj-cell">{% for app in rule.applications.all %}<span class="obj-chip">{{ app.name }}</span>{% empty %}<span class="obj-chip">any</span>{% endfor %}</td>
             <td><span class="badge badge-{{ rule.rule_action }}">{{ rule.rule_action|upper }}</span></td>
             <td class="rule-counter" data-rule="{{ rule.name }}"><span style="color:#95a5a6">-</span></td>
             <td>{% if rule.logging %}<span class="badge badge-info">LOG</span>{% else %}-{% endif %}</td>
+            <td class="obj-cell">{% for gw in rule.install_on_display %}<span class="obj-chip">{{ gw.name }}</span>{% empty %}<span class="obj-chip">{% trans "Everywhere" %}</span>{% endfor %}</td>
         </tr>
         {% endfor %}
         </tbody>

@@ -2,7 +2,7 @@ from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
     DDoSRule, NetworkObject, ServiceObject, ObjectGroup,
-    AppException, PasswordPolicy, ServiceComponent,
+    AppException, PasswordPolicy, ServiceComponent, Application,
 )
 
 
@@ -93,6 +93,13 @@ def import_config_json(data, filename=''):
                 'nexthop': obj.get('nexthop', ''),
                 'metric': obj.get('metric', 0),
                 'is_default': obj.get('is_default', False),
+                **base,
+            })
+
+        elif obj_type == 'application':
+            Application.objects.update_or_create(uuid=uuid, defaults={
+                'name': obj.get('name', ''),
+                'description': obj.get('description', ''),
                 **base,
             })
 
@@ -246,6 +253,12 @@ def import_config_json(data, filename=''):
 
         count += 1
 
+    # Build appcategory name lookup from objects
+    appcategory_names = {}
+    for obj in objects:
+        if obj.get('type') == 'appcategory' and obj.get('uuid'):
+            appcategory_names[obj['uuid']] = obj.get('name', '')
+
     # Second pass: process links
     links = [o for o in objects if o.get('type') == 'link']
     for link in links:
@@ -291,6 +304,35 @@ def import_config_json(data, filename=''):
                 svc = ServiceObject.objects.get(uuid=right_uuid)
                 rule.services.add(svc)
             except (FirewallRule.DoesNotExist, ServiceObject.DoesNotExist):
+                pass
+
+        # application -> appcategory
+        elif linkname == 'app_has_category':
+            cat_name = appcategory_names.get(right_uuid, '')
+            if cat_name:
+                try:
+                    app = Application.objects.get(uuid=left_uuid)
+                    app.category = cat_name
+                    app.save(update_fields=['category'])
+                except Application.DoesNotExist:
+                    pass
+
+        # fwrule -> application
+        elif linkname == 'rule_applications':
+            try:
+                rule = FirewallRule.objects.get(uuid=left_uuid)
+                app = Application.objects.get(uuid=right_uuid)
+                rule.applications.add(app)
+            except (FirewallRule.DoesNotExist, Application.DoesNotExist):
+                pass
+
+        # fwrule -> cgw (install_on)
+        elif linkname == 'install_on' and link.get('left_type') == 'rule.fwrule':
+            try:
+                rule = FirewallRule.objects.get(uuid=left_uuid)
+                gw = Gateway.objects.get(uuid=right_uuid)
+                rule.install_on.add(gw)
+            except (FirewallRule.DoesNotExist, Gateway.DoesNotExist):
                 pass
 
         # group -> netobject (members)

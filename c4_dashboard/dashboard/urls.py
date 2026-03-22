@@ -10,6 +10,7 @@ urlpatterns = [
     path('network/services/', views.services_view, name='services'),
     path('network/objects/', views.network_objects_view, name='network_objects'),
     path('policy/services/', views.service_objects_view, name='service_objects'),
+    path('policy/applications/', views.applications_view, name='applications'),
     path('firewall/rules/', views.firewall_rules_view, name='firewall_rules'),
     path('security/ddos/', views.ddos_view, name='ddos'),
     path('security/app-exceptions/', views.app_exceptions_view, name='app_exceptions'),

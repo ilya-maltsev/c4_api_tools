@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Applications" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "Applications" %}{% endblock %}
+{% block content %}
+<div class="table-wrap">
+    <table class="datatable">
+        <thead><tr><th>{% trans "Name" %}</th><th>{% trans "Category" %}</th><th>{% trans "Description" %}</th></tr></thead>
+        <tbody>
+        {% for app in applications %}
+        <tr>
+            <td><strong>{{ app.name }}</strong></td>
+            <td>{{ app.category|default:"-" }}</td>
+            <td>{{ app.description|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
