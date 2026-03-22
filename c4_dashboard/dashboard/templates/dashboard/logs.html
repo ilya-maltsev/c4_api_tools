@@ -40,6 +40,7 @@
         <option value="300000" selected>{% trans "every 5 min" %}</option>
     </select>
     <span id="log-status" style="font-size:12px;color:#95a5a6"></span>
+    <span style="margin-left:auto" class="toolbar-label">{% trans "Show" %} <select id="log-page-length" class="toolbar-select" style="width:60px"><option>10</option><option selected>25</option><option>50</option><option>100</option></select> {% trans "entries" %}</span>
 </div>
 
 <div class="table-wrap">
@@ -147,7 +148,7 @@ function fetchLogs() {
 
         // Init DataTable
         logDt = $('#log-table-view').DataTable({
-            pageLength: 25,
+            pageLength: parseInt($('#log-page-length').val()),
             order: [],
             orderCellsTop: true,
             language: {
@@ -238,6 +239,9 @@ $('#log-refresh').click(fetchLogs);
 $('#log-table, #log-interval, #log-limit').change(fetchLogs);
 $('#log-auto').change(startLogAuto);
 $('#log-auto-interval').change(startLogAuto);
+$('#log-page-length').change(function() {
+    if (logDt) logDt.page.len(parseInt(this.value)).draw();
+});
 
 fetchLogs();
 </script>

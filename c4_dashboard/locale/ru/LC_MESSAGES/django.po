@@ -570,3 +570,9 @@ msgstr "Удалено"
 
 msgid "Loading..."
 msgstr "Загрузка..."
+
+msgid "Show"
+msgstr "Показать"
+
+msgid "entries"
+msgstr "записей"
