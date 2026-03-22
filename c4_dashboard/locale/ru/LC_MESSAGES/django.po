@@ -576,3 +576,42 @@ msgstr "Показать"
 
 msgid "entries"
 msgstr "записей"
+
+msgid "Connecting to C4 Exporter API..."
+msgstr "Подключение к API экспортера К4..."
+
+msgid "Fetching configurations from Continent 4..."
+msgstr "Загрузка конфигураций из Континент 4..."
+
+msgid "Importing data to database..."
+msgstr "Импорт данных в базу данных..."
+
+msgid "Completed"
+msgstr "Завершено"
+
+msgid "Sync completed successfully"
+msgstr "Синхронизация завершена успешно"
+
+msgid "Reading file..."
+msgstr "Чтение файла..."
+
+msgid "Uploading..."
+msgstr "Загрузка..."
+
+msgid "Import completed successfully"
+msgstr "Импорт завершен успешно"
+
+msgid "Import failed"
+msgstr "Ошибка импорта"
+
+msgid "Connection failed"
+msgstr "Ошибка подключения"
+
+msgid "Confirmation"
+msgstr "Подтверждение"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Confirm"
+msgstr "Подтвердить"

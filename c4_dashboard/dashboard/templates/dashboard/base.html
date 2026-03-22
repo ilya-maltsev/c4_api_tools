@@ -99,9 +99,46 @@
         </div>
     </div>
 
+    <!-- Confirm modal -->
+    <div id="confirm-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:10000;background:rgba(0,0,0,0.5)">
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,0.3);width:420px;max-width:90%">
+            <div style="padding:20px 24px;border-bottom:1px solid var(--fi-border)">
+                <h3 id="confirm-title" style="font-size:16px;color:var(--fi-text);margin:0">{% trans "Confirmation" %}</h3>
+            </div>
+            <div style="padding:20px 24px">
+                <p id="confirm-message" style="font-size:14px;color:var(--fi-text);margin:0"></p>
+            </div>
+            <div style="padding:14px 24px;border-top:1px solid var(--fi-border);display:flex;justify-content:flex-end;gap:8px;background:#f8f9fa;border-radius:0 0 4px 4px">
+                <button id="confirm-cancel" class="btn btn-default">{% trans "Cancel" %}</button>
+                <button id="confirm-ok" class="btn btn-primary" style="background:var(--fi-error);border-color:var(--fi-error)">{% trans "Confirm" %}</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script>
+        function showConfirm(message, callback, title) {
+            var $modal = $('#confirm-modal');
+            $('#confirm-title').text(title || '{% trans "Confirmation" %}');
+            $('#confirm-message').text(message);
+            $modal.fadeIn(150);
+            $('#confirm-cancel').off('click').on('click', function() { $modal.fadeOut(150); });
+            $('#confirm-ok').off('click').on('click', function() { $modal.fadeOut(150); callback(); });
+            $modal.off('click').on('click', function(e) { if (e.target === this) $modal.fadeOut(150); });
+        }
+
+        function showToast(msg, type) {
+            var bg = type === 'error' ? '#f8d7da' : '#d4edda';
+            var color = type === 'error' ? '#721c24' : '#155724';
+            var border = type === 'error' ? '#f5c6cb' : '#c3e6cb';
+            var icon = type === 'error' ? '&#10006;' : '&#10004;';
+            var $toast = $('<div style="position:fixed;top:20px;right:20px;z-index:9999;min-width:350px;max-width:500px;padding:14px 20px;font-size:14px;font-weight:600;background:' + bg + ';color:' + color + ';border:2px solid ' + border + ';border-radius:4px;box-shadow:0 6px 20px rgba(0,0,0,0.25);cursor:pointer">' + icon + '&nbsp;&nbsp;' + msg + '</div>');
+            $('body').append($toast);
+            $toast.click(function() { $(this).remove(); });
+            setTimeout(function() { $toast.fadeOut(800, function() { $toast.remove(); }); }, 30000);
+        }
+
         $(document).ready(function() {
             $('.datatable').each(function() {
                 var $table = $(this);

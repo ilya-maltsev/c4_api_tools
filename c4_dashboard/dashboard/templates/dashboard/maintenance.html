@@ -60,9 +60,9 @@
 <div class="import-form">
     <h3 style="margin-bottom:12px">{% trans "Clear dashboard database" %}</h3>
     <p style="margin-bottom:16px;color:var(--fi-text-muted);font-size:13px">{% trans "Delete all imported configuration data. User accounts and Django settings will not be affected." %}</p>
-    <form method="post" action="{% url 'clear_db' %}" onsubmit="return confirm('{% trans "Are you sure? All configuration data will be deleted." %}')">
+    <form method="post" action="{% url 'clear_db' %}" id="clear-db-form">
         {% csrf_token %}
-        <button type="submit" class="btn btn-primary" style="background:var(--fi-error);border-color:var(--fi-error)">{% trans "Clear database" %}</button>
+        <button type="button" id="clear-db-btn" class="btn btn-primary" style="background:var(--fi-error);border-color:var(--fi-error)">{% trans "Clear database" %}</button>
     </form>
 </div>
 
@@ -145,21 +145,34 @@ function loadCusTables() {
 
 $(document).on('click', '.cleanup-btn', function() {
     var table = $(this).data('table');
-    var days = $(this).closest('tr').find('.cleanup-days').val();
-    if (!confirm('{% trans "Delete records older than" %} ' + days + ' {% trans "days" %} {% trans "from table" %} "' + table + '"?')) return;
-
+    var $row = $(this).closest('tr');
+    var days = $row.find('.cleanup-days').val();
     var $btn = $(this);
-    $btn.text('...').prop('disabled', true);
-    var csrfToken = '{{ csrf_token }}';
-    $.post('{% url "cus_db_cleanup" %}', {table: table, days: days, csrfmiddlewaretoken: csrfToken}, function(data) {
-        $btn.text('{% trans "Delete" %}').prop('disabled', false);
-        alert('{% trans "Deleted" %}: ' + data.deleted.toLocaleString() + ' {% trans "records" %}');
-        loadCusTables();
-    }, 'json').fail(function(xhr) {
-        $btn.text('{% trans "Delete" %}').prop('disabled', false);
-        var msg = xhr.responseJSON ? xhr.responseJSON.error : 'error';
-        alert('{% trans "Error" %}: ' + msg);
-    });
+
+    showConfirm(
+        '{% trans "Delete records older than" %} ' + days + ' {% trans "days" %} {% trans "from table" %} "' + table + '"?',
+        function() {
+            $btn.text('...').prop('disabled', true);
+            var csrfToken = '{{ csrf_token }}';
+            $.post('{% url "cus_db_cleanup" %}', {table: table, days: days, csrfmiddlewaretoken: csrfToken}, function(data) {
+                $btn.text('{% trans "Delete" %}').prop('disabled', false);
+                showToast('{% trans "Deleted" %}: ' + data.deleted.toLocaleString() + ' {% trans "records" %} ({% trans "from table" %} ' + table + ')', 'success');
+                loadCusTables();
+            }, 'json').fail(function(xhr) {
+                $btn.text('{% trans "Delete" %}').prop('disabled', false);
+                var msg = xhr.responseJSON ? xhr.responseJSON.error : 'error';
+                showToast('{% trans "Error" %}: ' + msg, 'error');
+            });
+        }
+    );
+});
+
+// Clear dashboard DB button
+$('#clear-db-btn').click(function() {
+    showConfirm(
+        '{% trans "Are you sure? All configuration data will be deleted." %}',
+        function() { $('#clear-db-form').submit(); }
+    );
 });
 
 $('#refresh-cus-tables').click(loadCusTables);
