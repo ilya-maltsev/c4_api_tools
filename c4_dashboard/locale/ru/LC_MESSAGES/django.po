@@ -615,3 +615,24 @@ msgstr "Отмена"
 
 msgid "Confirm"
 msgstr "Подтвердить"
+
+msgid "Configuration"
+msgstr "Конфигурация"
+
+msgid "Export configs from Continent 4"
+msgstr "Экспорт конфигураций из Континент 4"
+
+msgid "Download all gateway configurations as tar.gz archive."
+msgstr "Скачать конфигурации всех шлюзов в архиве tar.gz."
+
+msgid "Export configs"
+msgstr "Экспорт конфигураций"
+
+msgid "Packing archive..."
+msgstr "Упаковка архива..."
+
+msgid "Export completed successfully"
+msgstr "Экспорт завершен успешно"
+
+msgid "Export failed"
+msgstr "Ошибка экспорта"

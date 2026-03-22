@@ -183,7 +183,7 @@ def password_policy_view(request):
 
 
 @login_required
-def import_config_view(request):
+def config_view(request):
     imports = ConfigImport.objects.all()[:20]
     if request.method == 'POST':
         uploaded = request.FILES.get('config_file')
@@ -191,12 +191,63 @@ def import_config_view(request):
             data = json.loads(uploaded.read().decode('utf-8'))
             ci = import_config_json(data, uploaded.name)
             messages.success(request, f"Imported {ci.objects_count} objects from {ci.gateway_name}")
-            return redirect('import_config')
+            return redirect('configuration')
         messages.error(request, "No file selected")
-    return render(request, 'dashboard/import.html', {
+    return render(request, 'dashboard/configuration.html', {
         'imports': imports,
-        'page': 'import_config',
+        'page': 'configuration',
     })
+
+
+import_config_view = config_view
+
+
+@login_required
+def export_configs_api(request):
+    import io
+    import tarfile
+    from datetime import datetime
+    from django.http import HttpResponse
+
+    api_url = settings.C4_EXPORTER_API_URL.rstrip('/')
+    try:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ctx.set_ciphers("ALL:@SECLEVEL=0")
+        ca_cert = getattr(settings, 'C4_CA_CERT', '')
+        client_cert = getattr(settings, 'C4_CLIENT_CERT', '')
+        client_key = getattr(settings, 'C4_CLIENT_KEY', '')
+        if ca_cert and os.path.exists(ca_cert):
+            ctx.load_verify_locations(ca_cert)
+        else:
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+        if client_cert and os.path.exists(client_cert):
+            ctx.load_cert_chain(client_cert, client_key)
+
+        req = urllib.request.Request(f"{api_url}/api/configs", method='GET')
+        with urllib.request.urlopen(req, timeout=120, context=ctx) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)
+
+    gateways = data.get('gateways', [])
+    if not gateways:
+        return JsonResponse({'error': 'No configs returned'}, status=404)
+
+    buf = io.BytesIO()
+    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    with tarfile.open(fileobj=buf, mode='w:gz') as tar:
+        for gw in gateways:
+            name = gw.get('name', gw.get('hwserial', 'unknown'))
+            config_json = json.dumps(gw.get('config', {}), indent=2, ensure_ascii=False).encode('utf-8')
+            info = tarfile.TarInfo(name=f"{name}_config.json")
+            info.size = len(config_json)
+            tar.addfile(info, io.BytesIO(config_json))
+
+    buf.seek(0)
+    response = HttpResponse(buf.read(), content_type='application/gzip')
+    response['Content-Disposition'] = f'attachment; filename="c4_configs_{ts}.tar.gz"'
+    return response
 
 
 @login_required

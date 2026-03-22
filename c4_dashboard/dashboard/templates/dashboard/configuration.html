@@ -1,0 +1,226 @@
+{% extends "dashboard/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Configuration" %} - {% trans "Continent 4" %}{% endblock %}
+{% block page_title %}{% trans "Configuration" %}{% endblock %}
+{% block content %}
+
+<div class="import-form">
+    <h3 style="margin-bottom:12px">{% trans "Export configs from Continent 4" %}</h3>
+    <p style="margin-bottom:16px;color:var(--fi-text-muted);font-size:13px">{% trans "Download all gateway configurations as tar.gz archive." %}</p>
+    <button type="button" id="export-btn" class="btn btn-primary">{% trans "Export configs" %}</button>
+    <div id="export-progress" style="display:none;margin-top:12px">
+        <div style="margin-bottom:6px">
+            <span id="export-step" style="font-size:13px;color:var(--fi-text)"></span>
+        </div>
+        <div style="background:#e9ecef;border-radius:3px;height:20px;overflow:hidden;border:1px solid var(--fi-border)">
+            <div id="export-bar" style="height:100%;background:var(--fi-primary);border-radius:3px;transition:width 0.3s;width:0%"></div>
+        </div>
+    </div>
+</div>
+
+<div class="import-form">
+    <h3 style="margin-bottom:12px">{% trans "Sync from Continent 4" %}</h3>
+    <p style="margin-bottom:16px;color:var(--fi-text-muted);font-size:13px">{% trans "Fetch configs directly from C4 via the Exporter API." %}</p>
+    <button type="button" id="sync-btn" class="btn btn-primary">{% trans "Sync from C4" %}</button>
+    <div id="sync-progress" style="display:none;margin-top:12px">
+        <div style="margin-bottom:6px">
+            <span id="sync-step" style="font-size:13px;color:var(--fi-text)"></span>
+        </div>
+        <div style="background:#e9ecef;border-radius:3px;height:20px;overflow:hidden;border:1px solid var(--fi-border)">
+            <div id="sync-bar" style="height:100%;background:var(--fi-primary);border-radius:3px;transition:width 0.3s;width:0%"></div>
+        </div>
+    </div>
+</div>
+
+<div class="import-form">
+    <h3 style="margin-bottom:12px">{% trans "Upload JSON config file" %}</h3>
+    <p style="margin-bottom:16px;color:var(--fi-text-muted);font-size:13px">{% trans "Upload a configuration JSON file exported by c4_config_exporter." %}</p>
+    <form method="post" enctype="multipart/form-data" id="upload-form">
+        {% csrf_token %}
+        <input type="file" name="config_file" accept=".json" id="upload-file">
+        <button type="submit" class="btn btn-primary" id="upload-btn">{% trans "Import File" %}</button>
+    </form>
+    <div id="upload-progress" style="display:none;margin-top:12px">
+        <div style="margin-bottom:6px">
+            <span id="upload-step" style="font-size:13px;color:var(--fi-text)"></span>
+        </div>
+        <div style="background:#e9ecef;border-radius:3px;height:20px;overflow:hidden;border:1px solid var(--fi-border)">
+            <div id="upload-bar" style="height:100%;background:var(--fi-primary);border-radius:3px;transition:width 0.3s;width:0%"></div>
+        </div>
+    </div>
+</div>
+
+{% if imports %}
+<div class="panel">
+    <div class="panel-header">{% trans "Import History" %}</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>{% trans "Date" %}</th><th>{% trans "Gateway" %}</th><th>{% trans "File" %}</th><th>{% trans "Objects" %}</th></tr></thead>
+            <tbody>
+            {% for imp in imports %}
+            <tr>
+                <td>{{ imp.imported_at|date:"Y-m-d H:i:s" }}</td>
+                <td><strong>{{ imp.gateway_name|default:"-" }}</strong></td>
+                <td>{{ imp.source_file }}</td>
+                <td>{{ imp.objects_count }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Export configs
+$('#export-btn').click(function() {
+    var $btn = $(this);
+    var $progress = $('#export-progress');
+    var $bar = $('#export-bar');
+    var $step = $('#export-step');
+
+    $btn.hide();
+    $progress.show();
+    $bar.css({'width': '10%', 'background': 'var(--fi-primary)'});
+    $step.text('{% trans "Connecting to C4 Exporter API..." %}');
+
+    var pct = 10;
+    var timer = setInterval(function() {
+        pct = Math.min(pct + Math.random() * 6, 85);
+        $bar.css('width', pct + '%');
+        if (pct > 25 && pct < 55) $step.text('{% trans "Fetching configurations from Continent 4..." %}');
+        if (pct >= 55) $step.text('{% trans "Packing archive..." %}');
+    }, 500);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '{% url "export_configs" %}', true);
+    xhr.responseType = 'blob';
+    xhr.onload = function() {
+        clearInterval(timer);
+        $progress.hide();
+        $btn.show();
+        if (xhr.status === 200) {
+            var cd = xhr.getResponseHeader('Content-Disposition') || '';
+            var filename = cd.match(/filename="?([^"]+)"?/);
+            filename = filename ? filename[1] : 'c4_configs.tar.gz';
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(xhr.response);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast('{% trans "Export completed successfully" %}', 'success');
+        } else {
+            var reader = new FileReader();
+            reader.onload = function() {
+                try { var d = JSON.parse(reader.result); showToast('{% trans "Error" %}: ' + d.error, 'error'); }
+                catch(e) { showToast('{% trans "Export failed" %}', 'error'); }
+            };
+            reader.readAsText(xhr.response);
+        }
+    };
+    xhr.onerror = function() {
+        clearInterval(timer);
+        $progress.hide();
+        $btn.show();
+        showToast('{% trans "Export failed" %}', 'error');
+    };
+    xhr.send();
+});
+
+// Sync from C4
+$('#sync-btn').click(function() {
+    var $btn = $(this);
+    var $progress = $('#sync-progress');
+    var $bar = $('#sync-bar');
+    var $step = $('#sync-step');
+
+    $btn.hide();
+    $progress.show();
+    $bar.css({'width': '10%', 'background': 'var(--fi-primary)'});
+    $step.text('{% trans "Connecting to C4 Exporter API..." %}');
+
+    var pct = 10;
+    var timer = setInterval(function() {
+        pct = Math.min(pct + Math.random() * 8, 90);
+        $bar.css('width', pct + '%');
+        if (pct > 30 && pct < 60) $step.text('{% trans "Fetching configurations from Continent 4..." %}');
+        if (pct >= 60) $step.text('{% trans "Importing data to database..." %}');
+    }, 500);
+
+    $.ajax({
+        url: '{% url "sync_from_c4" %}',
+        method: 'POST',
+        data: {csrfmiddlewaretoken: '{{ csrf_token }}', next: 'configuration'},
+        success: function() {
+            clearInterval(timer);
+            $progress.hide();
+            $btn.show();
+            showToast('{% trans "Sync completed successfully" %}', 'success');
+            setTimeout(function() { location.reload(); }, 2000);
+        },
+        error: function(xhr) {
+            clearInterval(timer);
+            $progress.hide();
+            $btn.show();
+            var msg = xhr.responseText || '{% trans "Connection failed" %}';
+            showToast('{% trans "Error" %}: ' + msg.substring(0, 200), 'error');
+        }
+    });
+});
+
+// Upload file with progress
+$('#upload-form').submit(function(e) {
+    e.preventDefault();
+    var file = $('#upload-file')[0].files[0];
+    if (!file) return;
+
+    var $btn = $('#upload-btn');
+    var $fileInput = $('#upload-file');
+    var $progress = $('#upload-progress');
+    var $bar = $('#upload-bar');
+    var $step = $('#upload-step');
+
+    $btn.hide();
+    $fileInput.hide();
+    $progress.show();
+    $bar.css({'width': '0%', 'background': 'var(--fi-primary)'});
+    $step.text('{% trans "Reading file..." %}');
+
+    var formData = new FormData(this);
+
+    $.ajax({
+        url: '',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        xhr: function() {
+            var xhr = new window.XMLHttpRequest();
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    var pct = Math.round(e.loaded / e.total * 80);
+                    $bar.css('width', pct + '%');
+                    $step.text('{% trans "Uploading..." %} ' + Math.round(e.loaded / e.total * 100) + '%');
+                }
+            });
+            return xhr;
+        },
+        success: function() {
+            $progress.hide();
+            $btn.show();
+            $fileInput.show();
+            showToast('{% trans "Import completed successfully" %}', 'success');
+            setTimeout(function() { location.reload(); }, 2000);
+        },
+        error: function() {
+            $progress.hide();
+            $btn.show();
+            $fileInput.show();
+            showToast('{% trans "Import failed" %}', 'error');
+        }
+    });
+});
+</script>
+{% endblock %}
