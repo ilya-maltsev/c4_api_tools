@@ -3,10 +3,11 @@
 # Build, export and import Docker images for the demo environment.
 #
 # Usage:
-#   cd demo && bash build-images.sh build     # build all images
+#   cd demo && bash build-images.sh           # build all images (default)
+#   cd demo && bash build-images.sh build     # same as above
 #   cd demo && bash build-images.sh export    # export to c4-images.tar.gz
 #   cd demo && bash build-images.sh import    # import from c4-images.tar.gz
-#   cd demo && bash build-images.sh           # build + export
+#   cd demo && bash build-images.sh all       # build + export
 #
 
 set -euo pipefail
@@ -61,7 +62,7 @@ import_images() {
     echo "Now run:  cd demo && docker compose up -d"
 }
 
-CMD="${1:-all}"
+CMD="${1:-build}"
 
 case "${CMD}" in
     build)
