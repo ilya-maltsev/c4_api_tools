@@ -14,7 +14,7 @@ from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
     DDoSRule, NetworkObject, ServiceObject, AppException, PasswordPolicy,
-    ServiceComponent, CusDbSettings, Application,
+    ServiceComponent, CusDbSettings, Application, CleanupSettings,
 )
 from .importer import import_config_json
 
@@ -412,12 +412,16 @@ def maintenance_view(request):
     total = sum(counts.values())
     cus_db = CusDbSettings.get_or_empty()
     cus_ok, cus_msg = test_cus_db_connection()
+    cleanup = CleanupSettings.get_or_default()
+    from . import cleanup_scheduler
     return render(request, 'dashboard/maintenance.html', {
         'counts': counts,
         'total': total,
         'cus_db': cus_db,
         'cus_connected': cus_ok,
         'cus_status': cus_msg,
+        'cleanup': cleanup,
+        'scheduler_running': cleanup_scheduler.is_running(),
         'page': 'maintenance',
     })
 
@@ -572,6 +576,114 @@ def cus_db_cleanup_api(request):
         cur.close()
         conn.close()
         return JsonResponse({'deleted': total_deleted, 'table': table, 'days': days})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)
+
+
+ALLOWED_CLEANUP_TABLES = {'ids_log', 'log', 'management_log'}
+
+
+@login_required
+def save_cleanup_settings_view(request):
+    if request.method != 'POST':
+        return redirect('maintenance')
+    tables_raw = request.POST.getlist('cleanup_tables')
+    tables = [t for t in tables_raw if t in ALLOWED_CLEANUP_TABLES]
+    is_enabled = request.POST.get('cleanup_enabled') == 'on'
+    interval_seconds = max(600, int(request.POST.get('interval_seconds', 3600)))
+    retention = max(1, int(request.POST.get('retention_days', 7)))
+    batch_size = max(1000, min(100000, int(request.POST.get('batch_size', 10000))))
+
+    obj = CleanupSettings.objects.first()
+    if obj:
+        obj.is_enabled = is_enabled
+        obj.interval_seconds = interval_seconds
+        obj.retention_days = retention
+        obj.batch_size = batch_size
+        obj.tables = tables
+        obj.save()
+    else:
+        CleanupSettings.objects.create(
+            is_enabled=is_enabled,
+            interval_seconds=interval_seconds,
+            retention_days=retention,
+            batch_size=batch_size,
+            tables=tables,
+        )
+    messages.success(request, 'Cleanup settings saved.')
+    return redirect('maintenance')
+
+
+@login_required
+def run_cleanup_api(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    cleanup = CleanupSettings.objects.first()
+    if not cleanup or not cleanup.tables:
+        return JsonResponse({'error': 'Cleanup not configured'}, status=400)
+
+    conn = get_cus_db_connection()
+    if not conn:
+        return JsonResponse({'error': 'CUS database not connected'}, status=503)
+
+    from django.utils import timezone
+
+    results = {}
+    try:
+        cur = conn.cursor()
+        for table in cleanup.tables:
+            if table not in ALLOWED_CLEANUP_TABLES:
+                continue
+            # Verify table has timestamp column
+            cur.execute("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = %s AND column_name = 'timestamp'
+            """, [table])
+            if not cur.fetchone():
+                results[table] = {'error': 'no timestamp column'}
+                continue
+
+            total_deleted = 0
+            while True:
+                cur.execute(f"""
+                    WITH to_delete AS (
+                        SELECT id FROM {table}
+                        WHERE "timestamp" < NOW() - INTERVAL '{cleanup.retention_days} days'
+                        LIMIT {cleanup.batch_size}
+                        FOR UPDATE SKIP LOCKED
+                    ),
+                    deleted AS (
+                        DELETE FROM {table}
+                        WHERE id IN (SELECT id FROM to_delete)
+                        RETURNING 1
+                    )
+                    SELECT count(*) FROM deleted
+                """)
+                batch = cur.fetchone()[0]
+                conn.commit()
+                if batch == 0:
+                    break
+                total_deleted += batch
+
+            # Vacuum
+            old_isolation = conn.isolation_level
+            conn.set_isolation_level(0)
+            cur.execute(f"VACUUM ANALYZE {table}")
+            conn.set_isolation_level(old_isolation)
+
+            results[table] = {'deleted': total_deleted}
+
+        cur.close()
+        conn.close()
+
+        # Update last run info
+        summary = ', '.join(f"{t}: {r.get('deleted', r.get('error', '?'))}" for t, r in results.items())
+        cleanup.last_run = timezone.now()
+        cleanup.last_result = summary
+        cleanup.save()
+
+        return JsonResponse({'results': results})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=502)
 

@@ -26,6 +26,45 @@ class CusDbSettings(models.Model):
         return cls(host='', port='5432', dbname='cus-logs', user='monitoring', password='')
 
 
+CLEANUP_INTERVAL_CHOICES = [
+    (600, '10 min'),
+    (1800, '30 min'),
+    (3600, '1 hour'),
+    (21600, '6 hours'),
+    (43200, '12 hours'),
+    (86400, '24 hours'),
+]
+
+
+class CleanupSettings(models.Model):
+    is_enabled = models.BooleanField(default=False)
+    interval_seconds = models.IntegerField(default=3600)  # how often to check
+    retention_days = models.IntegerField(default=7)
+    batch_size = models.IntegerField(default=10000)
+    tables = models.JSONField(default=list)  # e.g. ["ids_log", "log", "management_log"]
+    last_run = models.DateTimeField(null=True, blank=True)
+    last_result = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = 'Cleanup Settings'
+
+    def __str__(self):
+        return f"Cleanup: {self.retention_days}d, tables={self.tables}"
+
+    @classmethod
+    def get_or_default(cls):
+        obj = cls.objects.first()
+        if obj:
+            return obj
+        return cls(
+            is_enabled=False,
+            interval_seconds=3600,
+            retention_days=7,
+            batch_size=10000,
+            tables=['ids_log', 'log', 'management_log'],
+        )
+
+
 class ConfigImport(models.Model):
     imported_at = models.DateTimeField(auto_now_add=True)
     source_file = models.CharField(max_length=512)

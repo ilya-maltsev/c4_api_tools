@@ -57,6 +57,73 @@
 </div>
 {% endif %}
 
+{% if cus_connected %}
+<div class="import-form">
+    <h3 style="margin-bottom:8px">
+        {% trans "CUS Log Auto-Cleanup" %}
+        {% if cleanup.is_enabled and scheduler_running %}
+        <span class="badge badge-on" style="font-size:11px;vertical-align:middle">{% trans "Active" %}</span>
+        {% elif cleanup.is_enabled %}
+        <span class="badge badge-warn" style="font-size:11px;vertical-align:middle">{% trans "Enabled" %} ({% trans "starting" %}...)</span>
+        {% else %}
+        <span class="badge badge-off" style="font-size:11px;vertical-align:middle">{% trans "Disabled" %}</span>
+        {% endif %}
+    </h3>
+    <p style="margin-bottom:14px;color:var(--fi-text-muted);font-size:13px">{% trans "Delete old records from CUS log tables in batches without locking. Runs VACUUM ANALYZE after cleanup." %}</p>
+    <form method="post" action="{% url 'save_cleanup' %}" id="cleanup-settings-form">
+        {% csrf_token %}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;max-width:500px;margin-bottom:14px">
+            <div style="grid-column:span 2">
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:600">
+                    <input type="checkbox" name="cleanup_enabled" {% if cleanup.is_enabled %}checked{% endif %}> {% trans "Enable auto-cleanup" %}
+                </label>
+            </div>
+            <div>
+                <label class="toolbar-label" style="display:block;margin-bottom:2px">{% trans "Interval" %}</label>
+                <select name="interval_seconds" style="width:100%;padding:4px 8px;border:1px solid var(--fi-border);border-radius:3px;font-size:13px">
+                    <option value="600" {% if cleanup.interval_seconds == 600 %}selected{% endif %}>10 {% trans "minutes" %}</option>
+                    <option value="1800" {% if cleanup.interval_seconds == 1800 %}selected{% endif %}>30 {% trans "minutes" %}</option>
+                    <option value="3600" {% if cleanup.interval_seconds == 3600 %}selected{% endif %}>1 {% trans "hour" %}</option>
+                    <option value="21600" {% if cleanup.interval_seconds == 21600 %}selected{% endif %}>6 {% trans "hours" %}</option>
+                    <option value="43200" {% if cleanup.interval_seconds == 43200 %}selected{% endif %}>12 {% trans "hours" %}</option>
+                    <option value="86400" {% if cleanup.interval_seconds == 86400 %}selected{% endif %}>24 {% trans "hours" %}</option>
+                </select>
+            </div>
+            <div>
+                <label class="toolbar-label" style="display:block;margin-bottom:2px">{% trans "Retention" %} ({% trans "days" %})</label>
+                <input type="number" name="retention_days" value="{{ cleanup.retention_days }}" min="1" max="365" style="width:100%;padding:4px 8px;border:1px solid var(--fi-border);border-radius:3px;font-size:13px">
+            </div>
+            <div>
+                <label class="toolbar-label" style="display:block;margin-bottom:2px">{% trans "Batch size" %}</label>
+                <input type="number" name="batch_size" value="{{ cleanup.batch_size }}" min="1000" max="100000" step="1000" style="width:100%;padding:4px 8px;border:1px solid var(--fi-border);border-radius:3px;font-size:13px">
+            </div>
+            <div>
+                <label class="toolbar-label" style="display:block;margin-bottom:4px">{% trans "Tables" %}</label>
+                <label style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;font-size:13px;cursor:pointer">
+                    <input type="checkbox" name="cleanup_tables" value="ids_log" {% if 'ids_log' in cleanup.tables %}checked{% endif %}> ids_log
+                </label>
+                <label style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;font-size:13px;cursor:pointer">
+                    <input type="checkbox" name="cleanup_tables" value="log" {% if 'log' in cleanup.tables %}checked{% endif %}> log
+                </label>
+                <label style="display:inline-flex;align-items:center;gap:4px;font-size:13px;cursor:pointer">
+                    <input type="checkbox" name="cleanup_tables" value="management_log" {% if 'management_log' in cleanup.tables %}checked{% endif %}> management_log
+                </label>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+            <button type="button" id="run-cleanup-btn" class="btn btn-default" style="background:var(--fi-error);color:#fff;border-color:var(--fi-error)">{% trans "Run now" %}</button>
+            <span id="cleanup-status" style="font-size:12px"></span>
+        </div>
+    </form>
+    {% if cleanup.last_run %}
+    <div style="margin-top:10px;font-size:12px;color:var(--fi-text-muted)">
+        {% trans "Last run" %}: {{ cleanup.last_run|date:"Y-m-d H:i:s" }} — {{ cleanup.last_result }}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
 <div class="import-form">
     <h3 style="margin-bottom:12px">{% trans "Clear dashboard database" %}</h3>
     <p style="margin-bottom:16px;color:var(--fi-text-muted);font-size:13px">{% trans "Delete all imported configuration data. User accounts and Django settings will not be affected." %}</p>
@@ -177,6 +244,37 @@ $('#clear-db-btn').click(function() {
 
 $('#refresh-cus-tables').click(loadCusTables);
 loadCusTables();
+
+// Run cleanup
+$('#run-cleanup-btn').click(function() {
+    showConfirm(
+        '{% trans "Run cleanup now? Old records will be deleted from selected tables." %}',
+        function() {
+            var $btn = $('#run-cleanup-btn');
+            var $status = $('#cleanup-status');
+            $btn.prop('disabled', true).text('...');
+            $status.text('');
+            $.post('{% url "run_cleanup" %}', {csrfmiddlewaretoken: '{{ csrf_token }}'}, function(data) {
+                $btn.prop('disabled', false).text('{% trans "Run now" %}');
+                var parts = [];
+                for (var t in data.results) {
+                    var r = data.results[t];
+                    if (r.deleted !== undefined) {
+                        parts.push(t + ': ' + r.deleted.toLocaleString());
+                    } else {
+                        parts.push(t + ': ' + r.error);
+                    }
+                }
+                showToast('{% trans "Cleanup completed" %}: ' + parts.join(', '), 'success');
+                loadCusTables();
+            }, 'json').fail(function(xhr) {
+                $btn.prop('disabled', false).text('{% trans "Run now" %}');
+                var msg = xhr.responseJSON ? xhr.responseJSON.error : 'error';
+                showToast('{% trans "Error" %}: ' + msg, 'error');
+            });
+        }
+    );
+});
 {% endif %}
 </script>
 {% endblock %}

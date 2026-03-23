@@ -648,3 +648,45 @@ msgstr "Установить на"
 
 msgid "Everywhere"
 msgstr "Везде"
+
+msgid "CUS Log Auto-Cleanup"
+msgstr "Автоочистка логов ЦУС"
+
+msgid "Delete old records from CUS log tables in batches without locking. Runs VACUUM ANALYZE after cleanup."
+msgstr "Удаление старых записей из таблиц логов ЦУС батчами без блокировки. После очистки выполняется VACUUM ANALYZE."
+
+msgid "Retention"
+msgstr "Хранение"
+
+msgid "Batch size"
+msgstr "Размер батча"
+
+msgid "Tables"
+msgstr "Таблицы"
+
+msgid "Run now"
+msgstr "Запустить"
+
+msgid "Last run"
+msgstr "Последний запуск"
+
+msgid "Run cleanup now? Old records will be deleted from selected tables."
+msgstr "Запустить очистку? Старые записи будут удалены из выбранных таблиц."
+
+msgid "Cleanup completed"
+msgstr "Очистка завершена"
+
+msgid "Enable auto-cleanup"
+msgstr "Включить автоочистку"
+
+msgid "starting"
+msgstr "запуск"
+
+msgid "minutes"
+msgstr "минут"
+
+msgid "hours"
+msgstr "часов"
+
+msgid "hour"
+msgstr "час"

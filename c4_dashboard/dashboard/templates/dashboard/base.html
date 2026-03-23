@@ -20,14 +20,6 @@
             <span class="icon">&#9776;</span> {% trans "Logs" %}
         </a>
 
-        <div class="sidebar-section">{% trans "Network" %}</div>
-        <a href="{% url 'interfaces' %}" class="{% if page == 'interfaces' %}active{% endif %}">
-            <span class="icon">&#8865;</span> {% trans "Interfaces" %}
-        </a>
-        <a href="{% url 'routes' %}" class="{% if page == 'routes' %}active{% endif %}">
-            <span class="icon">&#10132;</span> {% trans "Static Routes" %}
-        </a>
-
         <div class="sidebar-section">{% trans "Policy & Objects" %}</div>
         <a href="{% url 'firewall_rules' %}" class="{% if page == 'firewall_rules' %}active{% endif %}">
             <span class="icon">&#9730;</span> {% trans "Firewall Rules" %}
