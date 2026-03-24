@@ -54,7 +54,7 @@
             <td class="obj-cell">{% for svc in rule.services.all %}<span class="obj-chip svc-chip" data-name="{{ svc.name }}" data-type="{{ svc.proto_display }}" data-ip="{{ svc.dst_port }}">{{ svc.name }}</span>{% empty %}<span class="obj-chip">any</span>{% endfor %}</td>
             <td class="obj-cell">{% for app in rule.applications.all %}<span class="obj-chip">{{ app.name }}</span>{% empty %}<span class="obj-chip">any</span>{% endfor %}</td>
             <td><span class="badge badge-{{ rule.rule_action }}">{{ rule.rule_action|upper }}</span></td>
-            <td class="rule-counter" data-rule="{{ rule.name }}"><span style="color:#95a5a6">-</span></td>
+            <td class="rule-counter" data-rule="{{ rule.name }}" data-order="0"><span style="color:#95a5a6">-</span></td>
             <td>{% if rule.logging %}<span class="badge badge-info">LOG</span>{% else %}-{% endif %}</td>
             <td class="obj-cell">{% for gw in rule.install_on_display %}<span class="obj-chip">{{ gw.name }}</span>{% empty %}<span class="obj-chip">{% trans "Everywhere" %}</span>{% endfor %}</td>
         </tr>
@@ -71,20 +71,21 @@ var autoTimer = null;
 function fetchCounters() {
     var interval = $('#counter-interval').val();
     $('#counter-status').text('...');
-    var dt = $('#fw-table').DataTable();
     $.getJSON('{% url "rule_counters_api" %}', {interval: interval}, function(data) {
         var counters = data.counters || {};
+        var dt = $.fn.dataTable.Api('#fw-table');
         dt.cells('.rule-counter').every(function() {
-            var $td = $(this.node());
-            var name = $td.data('rule');
+            var node = this.node();
+            var name = $(node).data('rule');
             var cnt = counters[name] || 0;
-            this.data(cnt);
+            $(node).attr('data-order', cnt);
             if (cnt > 0) {
-                $td.html('<strong>' + cnt.toLocaleString() + '</strong>');
+                $(node).html('<strong>' + cnt.toLocaleString() + '</strong>');
             } else {
-                $td.html('<span style="color:#95a5a6">0</span>');
+                $(node).html('<span style="color:#95a5a6">0</span>');
             }
         });
+        dt.rows().invalidate().draw(false);
         var now = new Date().toLocaleTimeString();
         $('#counter-status').text(now);
     }).fail(function(xhr) {
