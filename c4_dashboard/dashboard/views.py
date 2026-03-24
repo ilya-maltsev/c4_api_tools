@@ -13,7 +13,7 @@ from django.http import JsonResponse
 from .models import (
     ConfigImport, Gateway, Domain, NetworkInterface, StaticRoute,
     FirewallRule, Certificate, AdminUser, VPNConfig, DDoSProtection,
-    DDoSRule, NetworkObject, ServiceObject, AppException, PasswordPolicy,
+    DDoSRule, NetworkObject, ServiceObject, ObjectGroup, AppException, PasswordPolicy,
     ServiceComponent, CusDbSettings, Application, CleanupSettings,
 )
 from .importer import import_config_json
@@ -41,29 +41,31 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    gateway = Gateway.objects.first()
-    domain = Domain.objects.first()
-    interfaces = NetworkInterface.objects.all()
-    certs = Certificate.objects.all()
-    rules = FirewallRule.objects.all()
-    vpns = VPNConfig.objects.all()
-    ddos = DDoSProtection.objects.first()
-    services = ServiceComponent.objects.all()
+    gateways = Gateway.objects.all()
+    domains = Domain.objects.all()
+    rules_total = FirewallRule.objects.count()
+    rules_enabled = FirewallRule.objects.filter(is_enabled=True).count()
+    net_objects = NetworkObject.objects.count()
+    svc_objects = ServiceObject.objects.count()
+    apps_count = Application.objects.count()
+    groups_count = ObjectGroup.objects.count()
+    certs_count = Certificate.objects.count()
+    admins_count = AdminUser.objects.count()
+    imports = ConfigImport.objects.all()[:10]
     last_import = ConfigImport.objects.first()
 
-    enabled_services = services.filter(is_enabled=True).count()
-    total_services = services.count()
-
     return render(request, 'dashboard/dashboard.html', {
-        'gateway': gateway,
-        'domain': domain,
-        'interfaces': interfaces,
-        'certs': certs,
-        'rules_count': rules.count(),
-        'vpns': vpns,
-        'ddos': ddos,
-        'enabled_services': enabled_services,
-        'total_services': total_services,
+        'gateways': gateways,
+        'domains': domains,
+        'rules_total': rules_total,
+        'rules_enabled': rules_enabled,
+        'net_objects': net_objects,
+        'svc_objects': svc_objects,
+        'apps_count': apps_count,
+        'groups_count': groups_count,
+        'certs_count': certs_count,
+        'admins_count': admins_count,
+        'imports': imports,
         'last_import': last_import,
         'page': 'dashboard',
     })
@@ -125,7 +127,11 @@ def applications_view(request):
 
 @login_required
 def firewall_rules_view(request):
-    rules = FirewallRule.objects.prefetch_related('source_objects', 'destination_objects', 'source_groups', 'destination_groups', 'services').exclude(position=0)
+    rules = FirewallRule.objects.prefetch_related(
+        'source_objects', 'destination_objects',
+        'source_groups', 'destination_groups',
+        'services', 'applications', 'install_on',
+    ).exclude(position=0)
     cus_ok, cus_msg = test_cus_db_connection()
     return render(request, 'dashboard/firewall_rules.html', {
         'rules': rules,
@@ -217,29 +223,13 @@ def export_configs_api(request):
     import tarfile
     from datetime import datetime
     from django.http import HttpResponse
+    from . import c4_connector
 
-    api_url = settings.C4_EXPORTER_API_URL.rstrip('/')
     try:
-        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-        ctx.set_ciphers("ALL:@SECLEVEL=0")
-        ca_cert = getattr(settings, 'C4_CA_CERT', '')
-        client_cert = getattr(settings, 'C4_CLIENT_CERT', '')
-        client_key = getattr(settings, 'C4_CLIENT_KEY', '')
-        if ca_cert and os.path.exists(ca_cert):
-            ctx.load_verify_locations(ca_cert)
-        else:
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-        if client_cert and os.path.exists(client_cert):
-            ctx.load_cert_chain(client_cert, client_key)
-
-        req = urllib.request.Request(f"{api_url}/api/configs", method='GET')
-        with urllib.request.urlopen(req, timeout=120, context=ctx) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
+        gateways = c4_connector.get_all_configs()
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=502)
 
-    gateways = data.get('gateways', [])
     if not gateways:
         return JsonResponse({'error': 'No configs returned'}, status=404)
 
@@ -260,37 +250,62 @@ def export_configs_api(request):
 
 
 @login_required
+def sync_list_gateways_api(request):
+    """Step 1: List available gateways from C4."""
+    from . import c4_connector
+    try:
+        gateways = c4_connector.list_gateways()
+        return JsonResponse({'gateways': gateways})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)
+
+
+@login_required
+def sync_gateway_api(request):
+    """Step 2: Fetch and import a single gateway config by hwserial."""
+    from . import c4_connector
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    hwserial = request.POST.get('hwserial', '')
+    if not hwserial:
+        return JsonResponse({'error': 'hwserial required'}, status=400)
+
+    try:
+        data = c4_connector.get_config(hwserial)
+    except Exception as e:
+        return JsonResponse({'error': f'Fetch failed: {e}'}, status=502)
+
+    if 'objects' not in data:
+        return JsonResponse({'error': 'No objects in config'}, status=404)
+
+    name = hwserial
+    for obj in data.get('objects', []):
+        if obj.get('type') == 'cgw' and obj.get('hwserial') == hwserial:
+            name = obj.get('name', hwserial)
+            break
+
+    ci = import_config_json(data, f"api-sync:{name}")
+    return JsonResponse({
+        'name': ci.gateway_name or name,
+        'hwserial': hwserial,
+        'objects': ci.objects_count,
+    })
+
+
+@login_required
 def sync_from_c4_view(request):
+    """Legacy sync (all at once) — kept as fallback."""
+    from . import c4_connector
     if request.method != 'POST':
         return redirect('dashboard')
 
-    api_url = settings.C4_EXPORTER_API_URL.rstrip('/')
-
     try:
-        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-        ctx.set_ciphers("ALL:@SECLEVEL=0")
-        ca_cert = getattr(settings, 'C4_CA_CERT', '')
-        client_cert = getattr(settings, 'C4_CLIENT_CERT', '')
-        client_key = getattr(settings, 'C4_CLIENT_KEY', '')
-        if ca_cert and os.path.exists(ca_cert):
-            ctx.load_verify_locations(ca_cert)
-        else:
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-        if client_cert and os.path.exists(client_cert):
-            ctx.load_cert_chain(client_cert, client_key)
-
-        req = urllib.request.Request(f"{api_url}/api/configs", method='GET')
-        with urllib.request.urlopen(req, timeout=60, context=ctx) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-    except urllib.error.URLError as e:
-        messages.error(request, f"Cannot reach C4 Exporter API: {e}")
-        return redirect(request.POST.get('next', 'dashboard'))
+        gateways = c4_connector.get_all_configs()
     except Exception as e:
         messages.error(request, f"Sync failed: {e}")
         return redirect(request.POST.get('next', 'dashboard'))
 
-    gateways = data.get('gateways', [])
     if not gateways:
         messages.warning(request, "No gateway configs returned from C4")
         return redirect(request.POST.get('next', 'dashboard'))
@@ -330,6 +345,31 @@ def get_cus_db_connection():
     )
 
 
+CUS_INDEXES = [
+    ('ids_log_timestamp_idx', 'ids_log', '"timestamp"'),
+    ('ids_log_event_type_timestamp_idx', 'ids_log', 'event_type, "timestamp"'),
+    ('ids_log_rule_name_idx', 'ids_log', 'rule_name'),
+    ('ids_log_timestamp_id_idx', 'ids_log', '"timestamp", id'),
+    ('management_log_timestamp_idx', 'management_log', '"timestamp"'),
+]
+
+
+def _check_cus_indexes(conn):
+    """Return list of {name, table, columns, exists} for each required index."""
+    result = []
+    cur = conn.cursor()
+    for idx_name, table, columns in CUS_INDEXES:
+        cur.execute("SELECT 1 FROM pg_indexes WHERE indexname = %s", [idx_name])
+        result.append({
+            'name': idx_name,
+            'table': table,
+            'columns': columns,
+            'exists': cur.fetchone() is not None,
+        })
+    cur.close()
+    return result
+
+
 def test_cus_db_connection():
     try:
         conn = get_cus_db_connection()
@@ -342,6 +382,52 @@ def test_cus_db_connection():
         return True, 'ok'
     except Exception as e:
         return False, str(e)
+
+
+@login_required
+def cus_db_indexes_api(request):
+    """Check which indexes exist on CUS log tables."""
+    conn = get_cus_db_connection()
+    if not conn:
+        return JsonResponse({'error': 'not_configured'}, status=503)
+    try:
+        indexes = _check_cus_indexes(conn)
+        conn.close()
+        return JsonResponse({'indexes': indexes})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)
+
+
+@login_required
+def cus_db_create_indexes_api(request):
+    """Try to create missing indexes. Returns per-index result."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    conn = get_cus_db_connection()
+    if not conn:
+        return JsonResponse({'error': 'not_configured'}, status=503)
+
+    results = []
+    try:
+        cur = conn.cursor()
+        for idx_name, table, columns in CUS_INDEXES:
+            cur.execute("SELECT 1 FROM pg_indexes WHERE indexname = %s", [idx_name])
+            if cur.fetchone():
+                results.append({'name': idx_name, 'status': 'exists'})
+                continue
+            try:
+                cur.execute(f"CREATE INDEX IF NOT EXISTS {idx_name} ON {table} ({columns})")
+                conn.commit()
+                results.append({'name': idx_name, 'status': 'created'})
+            except Exception as e:
+                conn.rollback()
+                results.append({'name': idx_name, 'status': 'error', 'message': str(e)})
+        cur.close()
+        conn.close()
+        return JsonResponse({'results': results})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)
 
 
 @login_required

@@ -71,15 +71,18 @@ var autoTimer = null;
 function fetchCounters() {
     var interval = $('#counter-interval').val();
     $('#counter-status').text('...');
+    var dt = $('#fw-table').DataTable();
     $.getJSON('{% url "rule_counters_api" %}', {interval: interval}, function(data) {
         var counters = data.counters || {};
-        $('.rule-counter').each(function() {
-            var name = $(this).data('rule');
-            var cnt = counters[name];
-            if (cnt !== undefined) {
-                $(this).html('<strong>' + cnt.toLocaleString() + '</strong>');
+        dt.cells('.rule-counter').every(function() {
+            var $td = $(this.node());
+            var name = $td.data('rule');
+            var cnt = counters[name] || 0;
+            this.data(cnt);
+            if (cnt > 0) {
+                $td.html('<strong>' + cnt.toLocaleString() + '</strong>');
             } else {
-                $(this).html('<span style="color:#95a5a6">0</span>');
+                $td.html('<span style="color:#95a5a6">0</span>');
             }
         });
         var now = new Date().toLocaleTimeString();

@@ -57,9 +57,8 @@ docker compose up -d
 | Контейнер | Образ | Описание |
 |---|---|---|
 | `demo-postgresql` | `postgres:16` | PostgreSQL (мониторинг + cus-logs) |
-| `demo-nginx-gost` | `c4-nginx-gost` | Nginx с ГОСТ TLS (порты 8443, 8444) |
-| `demo-c4-config-exporter` | `c4-config-exporter` | FastAPI — экспорт конфигураций УБ |
-| `demo-c4-dashboard` | `c4-dashboard` | Django — панель управления |
+| `demo-nginx-gost` | `c4-nginx-gost` | Nginx с ГОСТ TLS (порт 8443) |
+| `demo-c4-dashboard` | `c4-dashboard` | Django + c4_lib — панель с прямым подключением к К4 |
 
 ## Остановка
 
@@ -73,9 +72,21 @@ docker compose down
 docker compose down -v
 ```
 
+## Архитектура
+
+```
+Браузер ──────> nginx :8443 (ГОСТ + RSA TLS)
+                       |
+              Dashboard :8000 ──────────────────────────> Континент 4 :444
+                  |              (c4_lib, встроен в образ)
+                  |--> PostgreSQL :5432
+                  |--> cus-logs DB
+```
+
+c4_lib встроен в образ dashboard — подключается к Континент 4 напрямую, без отдельного сервиса-экспортера. Все сервисы на `network_mode: host`.
+
 ## Порты
 
 | Порт | Сервис |
 |---|---|
 | `8443` | nginx → dashboard (ГОСТ + RSA TLS) |
-| `8444` | nginx → exporter (ГОСТ mTLS, внутренний) |

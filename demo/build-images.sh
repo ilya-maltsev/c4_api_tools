@@ -15,19 +15,17 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ARCHIVE="${SCRIPT_DIR}/c4-images.tar.gz"
-IMAGES="c4-nginx-gost:latest c4-config-exporter:latest c4-dashboard:latest"
+IMAGES="postgres:16 c4-nginx-gost:latest c4-dashboard:latest"
 
 build_images() {
+    echo "=== Pulling postgres:16 ==="
+    docker pull postgres:16
+
+    echo ""
     echo "=== Building c4-nginx-gost ==="
     docker build -t c4-nginx-gost:latest \
         -f "${REPO_ROOT}/dev_env/dev-nginx-gost/Dockerfile" \
         "${REPO_ROOT}/dev_env/dev-nginx-gost/"
-
-    echo ""
-    echo "=== Building c4-config-exporter ==="
-    docker build -t c4-config-exporter:latest \
-        -f "${REPO_ROOT}/dev_env/dev-c4-config-exporter/Dockerfile" \
-        "${REPO_ROOT}/"
 
     echo ""
     echo "=== Building c4-dashboard ==="
@@ -37,7 +35,7 @@ build_images() {
 
     echo ""
     echo "=== Images built ==="
-    docker images --format "  {{.Repository}}:{{.Tag}}  {{.Size}}" | grep -E "^  c4-"
+    docker images --format "  {{.Repository}}:{{.Tag}}  {{.Size}}" | grep -E "^  (c4-|postgres)"
 }
 
 export_images() {
@@ -57,7 +55,7 @@ import_images() {
     gunzip -c "${ARCHIVE}" | docker load
     echo ""
     echo "=== Images loaded ==="
-    docker images --format "  {{.Repository}}:{{.Tag}}  {{.Size}}" | grep -E "^  c4-"
+    docker images --format "  {{.Repository}}:{{.Tag}}  {{.Size}}" | grep -E "^  (c4-|postgres)"
     echo ""
     echo "Now run:  cd demo && docker compose up -d"
 }

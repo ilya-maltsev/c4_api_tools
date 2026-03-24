@@ -129,44 +129,81 @@ $('#export-btn').click(function() {
     xhr.send();
 });
 
-// Sync from C4
+// Sync from C4 — step-by-step with real progress
 $('#sync-btn').click(function() {
     var $btn = $(this);
     var $progress = $('#sync-progress');
     var $bar = $('#sync-bar');
     var $step = $('#sync-step');
+    var csrf = '{{ csrf_token }}';
 
     $btn.hide();
     $progress.show();
-    $bar.css({'width': '10%', 'background': 'var(--fi-primary)'});
+    $bar.css({'width': '5%', 'background': 'var(--fi-primary)'});
     $step.text('{% trans "Connecting to C4 Exporter API..." %}');
 
-    var pct = 10;
-    var timer = setInterval(function() {
-        pct = Math.min(pct + Math.random() * 8, 90);
-        $bar.css('width', pct + '%');
-        if (pct > 30 && pct < 60) $step.text('{% trans "Fetching configurations from Continent 4..." %}');
-        if (pct >= 60) $step.text('{% trans "Importing data to database..." %}');
-    }, 500);
-
-    $.ajax({
-        url: '{% url "sync_from_c4" %}',
-        method: 'POST',
-        data: {csrfmiddlewaretoken: '{{ csrf_token }}', next: 'configuration'},
-        success: function() {
-            clearInterval(timer);
+    // Step 1: Get gateway list
+    $.getJSON('{% url "sync_list_gateways" %}', function(data) {
+        var gateways = data.gateways || [];
+        if (gateways.length === 0) {
             $progress.hide();
             $btn.show();
-            showToast('{% trans "Sync completed successfully" %}', 'success');
-            setTimeout(function() { location.reload(); }, 2000);
-        },
-        error: function(xhr) {
-            clearInterval(timer);
-            $progress.hide();
-            $btn.show();
-            var msg = xhr.responseText || '{% trans "Connection failed" %}';
-            showToast('{% trans "Error" %}: ' + msg.substring(0, 200), 'error');
+            showToast('{% trans "Error" %}: No gateways found', 'error');
+            return;
         }
+
+        $bar.css('width', '10%');
+        $step.text('{% trans "Fetching configurations from Continent 4..." %} (0/' + gateways.length + ')');
+
+        // Step 2: Fetch + import each gateway sequentially
+        var done = 0;
+        var totalObjects = 0;
+        var names = [];
+
+        function syncNext() {
+            if (done >= gateways.length) {
+                $bar.css('width', '100%');
+                $step.text('{% trans "Completed" %}');
+                showToast('{% trans "Sync completed successfully" %}: ' + names.join(', ') + ' (' + totalObjects + ' {% trans "objects" %})', 'success');
+                setTimeout(function() { location.reload(); }, 2000);
+                return;
+            }
+
+            var gw = gateways[done];
+            var pct = 10 + Math.round(90 * done / gateways.length);
+            $bar.css('width', pct + '%');
+            $step.text('{% trans "Fetching configurations from Continent 4..." %} ' + gw.name + ' (' + (done + 1) + '/' + gateways.length + ')');
+
+            $.ajax({
+                url: '{% url "sync_gateway" %}',
+                method: 'POST',
+                data: {csrfmiddlewaretoken: csrf, hwserial: gw.hwserial},
+                dataType: 'json',
+                success: function(result) {
+                    done++;
+                    totalObjects += result.objects || 0;
+                    names.push(result.name || gw.name);
+                    var pct = 10 + Math.round(90 * done / gateways.length);
+                    $bar.css('width', pct + '%');
+                    $step.text('{% trans "Importing data to database..." %} ' + result.name + ' (' + done + '/' + gateways.length + ', ' + totalObjects + ' {% trans "objects" %})');
+                    syncNext();
+                },
+                error: function(xhr) {
+                    done++;
+                    var msg = xhr.responseJSON ? xhr.responseJSON.error : 'error';
+                    $step.text('{% trans "Error" %}: ' + gw.name + ' — ' + msg);
+                    syncNext();
+                }
+            });
+        }
+
+        syncNext();
+
+    }).fail(function(xhr) {
+        $progress.hide();
+        $btn.show();
+        var msg = xhr.responseJSON ? xhr.responseJSON.error : '{% trans "Connection failed" %}';
+        showToast('{% trans "Error" %}: ' + msg, 'error');
     });
 });
 

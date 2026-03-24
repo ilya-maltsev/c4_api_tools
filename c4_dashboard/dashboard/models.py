@@ -80,8 +80,8 @@ class ConfigImport(models.Model):
 
 class Gateway(models.Model):
     uuid = models.UUIDField(primary_key=True)
-    name = models.CharField(max_length=255)
-    hwserial = models.CharField(max_length=64)
+    name = models.CharField(max_length=255, db_index=True)
+    hwserial = models.CharField(max_length=64, db_index=True)
     platform_version = models.CharField(max_length=128, blank=True)
     platform_name = models.CharField(max_length=128, blank=True)
     timezone_name = models.CharField(max_length=128, blank=True)
@@ -151,8 +151,8 @@ PROTO_MAP = {1: 'ICMP', 6: 'TCP', 17: 'UDP', 47: 'GRE', 50: 'ESP', 51: 'AH'}
 
 class ServiceObject(models.Model):
     uuid = models.UUIDField(primary_key=True)
-    name = models.CharField(max_length=255)
-    proto = models.IntegerField(default=0)
+    name = models.CharField(max_length=255, db_index=True)
+    proto = models.IntegerField(default=0, db_index=True)
     src_port = models.CharField(max_length=64, blank=True)
     dst_port = models.CharField(max_length=64, blank=True)
     domain_level = models.IntegerField(default=0)
@@ -178,7 +178,7 @@ class ServiceObject(models.Model):
 
 class ObjectGroup(models.Model):
     uuid = models.UUIDField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     subtype = models.CharField(max_length=32, blank=True)
     members = models.ManyToManyField('NetworkObject', blank=True, related_name='groups')
     domain_level = models.IntegerField(default=0)
@@ -194,9 +194,9 @@ class ObjectGroup(models.Model):
 
 class Application(models.Model):
     uuid = models.UUIDField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     description = models.TextField(blank=True)
-    category = models.CharField(max_length=128, blank=True)
+    category = models.CharField(max_length=128, blank=True, db_index=True)
     domain_level = models.IntegerField(default=0)
     lastmodified = models.BigIntegerField(default=0)
     config_import = models.ForeignKey(ConfigImport, on_delete=models.CASCADE, null=True)
@@ -210,11 +210,11 @@ class Application(models.Model):
 
 class FirewallRule(models.Model):
     uuid = models.UUIDField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     description = models.TextField(blank=True)
     is_enabled = models.BooleanField(default=True)
-    position = models.IntegerField(default=0)
-    rule_action = models.CharField(max_length=32)
+    position = models.IntegerField(default=0, db_index=True)
+    rule_action = models.CharField(max_length=32, db_index=True)
     logging = models.BooleanField(default=False)
     passips = models.BooleanField(default=False)
     priority = models.IntegerField(default=0)
@@ -254,8 +254,7 @@ class FirewallRule(models.Model):
 
     @property
     def install_on_display(self):
-        gws = self.install_on.all()
-        return list(gws) if gws.exists() else []
+        return list(self.install_on.all())
 
 
 class Certificate(models.Model):
@@ -345,11 +344,11 @@ class DDoSRule(models.Model):
 
 class NetworkObject(models.Model):
     uuid = models.UUIDField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     description = models.TextField(blank=True)
     is_enabled = models.BooleanField(default=True)
-    ip = models.CharField(max_length=64, blank=True)
-    subtype = models.CharField(max_length=32, blank=True)
+    ip = models.CharField(max_length=64, blank=True, db_index=True)
+    subtype = models.CharField(max_length=32, blank=True, db_index=True)
     domain_level = models.IntegerField(default=0)
     lastmodified = models.BigIntegerField(default=0)
     config_import = models.ForeignKey(ConfigImport, on_delete=models.CASCADE, null=True)

@@ -3,6 +3,7 @@ set -e
 
 CERT_DIR="/etc/nginx/certs"
 DAYS=${CERT_DAYS:-365}
+EXTRA_SANS="${CERT_EXTRA_SANS:-}"
 
 generate_gost_ca() {
     echo "[PKI] Generating GOST CA..."
@@ -70,13 +71,18 @@ if [ ! -f "${CERT_DIR}/ca.crt" ]; then
 
     # GOST CA + certs (internal mTLS + GOST frontend)
     generate_gost_ca
-    generate_cert gost "nginx"     "c4-nginx"     "DNS:localhost,IP:127.0.0.1"
-    generate_cert gost "dashboard" "c4-dashboard"  "DNS:localhost,IP:127.0.0.1"
-    generate_cert gost "exporter"  "c4-exporter"   "DNS:localhost,IP:127.0.0.1"
+    BASE_SAN="DNS:localhost,IP:127.0.0.1"
+    if [ -n "${EXTRA_SANS}" ]; then
+        BASE_SAN="${BASE_SAN},${EXTRA_SANS}"
+    fi
+
+    generate_cert gost "nginx"     "c4-nginx"     "${BASE_SAN}"
+    generate_cert gost "dashboard" "c4-dashboard"  "${BASE_SAN}"
+    generate_cert gost "exporter"  "c4-exporter"   "${BASE_SAN}"
 
     # RSA CA + cert (RSA frontend)
     generate_rsa_ca
-    generate_cert rsa "nginx-rsa" "c4-nginx-rsa" "DNS:localhost,IP:127.0.0.1"
+    generate_cert rsa "nginx-rsa" "c4-nginx-rsa" "${BASE_SAN}"
 
     echo "[PKI] Done."
     ls -la "${CERT_DIR}"

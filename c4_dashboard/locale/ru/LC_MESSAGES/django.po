@@ -690,3 +690,60 @@ msgstr "часов"
 
 msgid "hour"
 msgstr "час"
+
+msgid "CUS Log Database Indexes"
+msgstr "Индексы БД логов ЦУС"
+
+msgid "Index"
+msgstr "Индекс"
+
+msgid "Columns"
+msgstr "Столбцы"
+
+msgid "Missing"
+msgstr "Отсутствует"
+
+msgid "Create missing indexes"
+msgstr "Создать недостающие индексы"
+
+msgid "Manual SQL (if insufficient permissions)"
+msgstr "SQL для ручного создания (если недостаточно прав)"
+
+msgid "indexes created"
+msgstr "индексов создано"
+
+msgid "Gateways"
+msgstr "Шлюзы"
+
+msgid "Security nodes"
+msgstr "Узлы безопасности"
+
+msgid "Hosts and subnets"
+msgstr "Хосты и подсети"
+
+msgid "Protocols and ports"
+msgstr "Протоколы и порты"
+
+msgid "L7 applications"
+msgstr "Приложения L7"
+
+msgid "Object Groups"
+msgstr "Группы объектов"
+
+msgid "Groups"
+msgstr "Группы"
+
+msgid "Admin accounts"
+msgstr "Учетные записи"
+
+msgid "Domains"
+msgstr "Домены"
+
+msgid "Recent imports"
+msgstr "Последние импорты"
+
+msgid "Platform"
+msgstr "Платформа"
+
+msgid "All indexes already exist"
+msgstr "Все индексы уже существуют"

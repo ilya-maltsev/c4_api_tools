@@ -22,6 +22,8 @@ urlpatterns = [
     path('import/', views.config_view, name='import_config'),
     path('api/export-configs/', views.export_configs_api, name='export_configs'),
     path('sync/', views.sync_from_c4_view, name='sync_from_c4'),
+    path('api/sync-list/', views.sync_list_gateways_api, name='sync_list_gateways'),
+    path('api/sync-gateway/', views.sync_gateway_api, name='sync_gateway'),
     path('api/rule-counters/', views.rule_counters_api, name='rule_counters_api'),
     path('api/logs/', views.logs_api, name='logs_api'),
     path('monitor/logs/', views.logs_view, name='logs'),
@@ -31,6 +33,8 @@ urlpatterns = [
     path('api/test-cus-db/', views.test_cus_db_api, name='test_cus_db'),
     path('api/cus-db-tables/', views.cus_db_tables_api, name='cus_db_tables'),
     path('api/cus-db-cleanup/', views.cus_db_cleanup_api, name='cus_db_cleanup'),
+    path('api/cus-db-indexes/', views.cus_db_indexes_api, name='cus_db_indexes'),
+    path('api/cus-db-create-indexes/', views.cus_db_create_indexes_api, name='cus_db_create_indexes'),
     path('system/save-cleanup/', views.save_cleanup_settings_view, name='save_cleanup'),
     path('api/run-cleanup/', views.run_cleanup_api, name='run_cleanup'),
 ]

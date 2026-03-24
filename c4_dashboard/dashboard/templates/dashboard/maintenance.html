@@ -50,6 +50,13 @@
 
 {% if cus_connected %}
 <div class="panel">
+    <div class="panel-header">{% trans "CUS Log Database Indexes" %} <button id="refresh-indexes" class="btn btn-default" style="float:right;padding:2px 10px;font-size:11px">{% trans "Refresh" %}</button></div>
+    <div class="panel-body" id="indexes-body">
+        <p style="color:var(--fi-text-muted);font-size:13px">{% trans "Loading..." %}</p>
+    </div>
+</div>
+
+<div class="panel">
     <div class="panel-header">{% trans "CUS Log Database info" %} <button id="refresh-cus-tables" class="btn btn-default" style="float:right;padding:2px 10px;font-size:11px">{% trans "Refresh" %}</button></div>
     <div class="panel-body" id="cus-tables-body">
         <p style="color:var(--fi-text-muted);font-size:13px">{% trans "Loading..." %}</p>
@@ -244,6 +251,82 @@ $('#clear-db-btn').click(function() {
 
 $('#refresh-cus-tables').click(loadCusTables);
 loadCusTables();
+
+// Database indexes
+function loadIndexes() {
+    var $body = $('#indexes-body');
+    $body.html('<p style="color:var(--fi-text-muted);font-size:13px">{% trans "Loading..." %}</p>');
+    $.getJSON('{% url "cus_db_indexes" %}', function(data) {
+        var indexes = data.indexes || [];
+        var missing = indexes.filter(function(i) { return !i.exists; });
+        var html = '<table style="width:100%;border-collapse:collapse">';
+        html += '<thead><tr style="background:#e7e7e7">';
+        html += '<th style="padding:6px 12px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--fi-border)">{% trans "Index" %}</th>';
+        html += '<th style="padding:6px 12px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--fi-border)">{% trans "Table" %}</th>';
+        html += '<th style="padding:6px 12px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--fi-border)">{% trans "Columns" %}</th>';
+        html += '<th style="padding:6px 12px;text-align:center;font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--fi-border)">{% trans "Status" %}</th>';
+        html += '</tr></thead><tbody>';
+        indexes.forEach(function(idx) {
+            html += '<tr style="border-bottom:1px solid #eee">';
+            html += '<td style="padding:6px 12px;font-size:13px"><code>' + idx.name + '</code></td>';
+            html += '<td style="padding:6px 12px;font-size:13px">' + idx.table + '</td>';
+            html += '<td style="padding:6px 12px;font-size:13px"><code>' + idx.columns + '</code></td>';
+            if (idx.exists) {
+                html += '<td style="padding:6px 12px;text-align:center"><span class="badge badge-on">OK</span></td>';
+            } else {
+                html += '<td style="padding:6px 12px;text-align:center"><span class="badge badge-off">{% trans "Missing" %}</span></td>';
+            }
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+
+        if (missing.length > 0) {
+            html += '<div style="margin-top:12px;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">';
+            html += '<button id="create-indexes-btn" class="btn btn-primary" style="padding:4px 14px;font-size:12px">{% trans "Create missing indexes" %}</button>';
+            html += '<span id="indexes-status" style="font-size:12px;line-height:28px"></span>';
+            html += '</div>';
+            html += '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--fi-text-muted)">{% trans "Manual SQL (if insufficient permissions)" %}</summary>';
+            html += '<pre style="margin-top:6px;padding:10px;background:#f5f5f5;border:1px solid var(--fi-border);border-radius:3px;font-size:12px;overflow-x:auto">';
+            missing.forEach(function(idx) {
+                html += 'CREATE INDEX IF NOT EXISTS ' + idx.name + ' ON ' + idx.table + ' (' + idx.columns + ');\n';
+            });
+            html += '</pre></details>';
+        }
+
+        $body.html(html);
+    }).fail(function(xhr) {
+        var msg = xhr.responseJSON ? xhr.responseJSON.error : 'error';
+        $body.html('<p style="color:var(--fi-error)">' + msg + '</p>');
+    });
+}
+
+$(document).on('click', '#create-indexes-btn', function() {
+    var $btn = $(this);
+    var $status = $('#indexes-status');
+    $btn.prop('disabled', true).text('...');
+    $status.text('');
+    $.post('{% url "cus_db_create_indexes" %}', {csrfmiddlewaretoken: '{{ csrf_token }}'}, function(data) {
+        var results = data.results || [];
+        var created = results.filter(function(r) { return r.status === 'created'; }).length;
+        var errors = results.filter(function(r) { return r.status === 'error'; });
+        if (errors.length > 0) {
+            var msgs = errors.map(function(r) { return r.name + ': ' + r.message; });
+            showToast('{% trans "Error" %}: ' + msgs.join('; '), 'error');
+        } else if (created > 0) {
+            showToast(created + ' {% trans "indexes created" %}', 'success');
+        } else {
+            showToast('{% trans "All indexes already exist" %}', 'success');
+        }
+        loadIndexes();
+    }, 'json').fail(function(xhr) {
+        $btn.prop('disabled', false).text('{% trans "Create missing indexes" %}');
+        var msg = xhr.responseJSON ? xhr.responseJSON.error : 'error';
+        showToast('{% trans "Error" %}: ' + msg, 'error');
+    });
+});
+
+$('#refresh-indexes').click(loadIndexes);
+loadIndexes();
 
 // Run cleanup
 $('#run-cleanup-btn').click(function() {

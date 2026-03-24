@@ -32,6 +32,8 @@ class ApiConnector:
         self.session = requests.Session()
         self.session.auth = (self._user, self._password)
         self.session.verify = False
+        self.connect_timeout = 10
+        self.read_timeout = 300
 
         if self.log != None and self.log.isEnabledFor(logging.DEBUG):
             import http.client
@@ -48,11 +50,19 @@ class ApiConnector:
     def __parse_json(self, buffer):
         json_obj = {}
         if not buffer.ok:
-            self.print_error(f"\nОшибка: {buffer.status_code} {buffer.reason}")
+            msg = f"Ошибка: {buffer.status_code} {buffer.reason}"
+            self.print_error(f"\n{msg}")
             try:
-                self.print_error(f"{buffer.content.decode('utf-8')}")
+                body = buffer.content.decode('utf-8')
+                self.print_error(body)
             except:
-                pass
+                body = ''
+            if buffer.status_code == 401:
+                raise PermissionError('Authentication failed: invalid username or password')
+            elif buffer.status_code == 403:
+                raise PermissionError(f'Access denied: {buffer.reason}')
+            elif buffer.status_code >= 400:
+                raise ConnectionError(f'C4 API error: {buffer.status_code} {buffer.reason}')
 
         try:
             json_obj = json.loads(buffer.content.decode('utf-8'))
@@ -149,7 +159,7 @@ class ApiConnector:
         :return:
             Возвращает словарь.
         """
-        buffer = self.session.post(url=url, json=obj_dict, files=obj_files)
+        buffer = self.session.post(url=url, json=obj_dict, files=obj_files, timeout=(self.connect_timeout, self.read_timeout))
         return self.__parse_json(buffer)
 
     def put_to_endpoint(self, url, obj_dict, obj_files=None):
@@ -167,7 +177,7 @@ class ApiConnector:
         :return:
             Возвращает словарь.
         """
-        buffer = self.session.put(url=url, json=obj_dict, files=obj_files)
+        buffer = self.session.put(url=url, json=obj_dict, files=obj_files, timeout=(self.connect_timeout, self.read_timeout))
         return self.__parse_json(buffer)
 
     def delete_obj(self, url, uuid):
@@ -183,7 +193,7 @@ class ApiConnector:
         :return:
             Возвращает словарь.
         """
-        buffer = self.session.delete(url=f"{url}/{uuid}")
+        buffer = self.session.delete(url=f"{url}/{uuid}", timeout=(self.connect_timeout, self.read_timeout))
         return self.__parse_json(buffer)
 
     def get_from_endpoint(self, url):
@@ -197,7 +207,7 @@ class ApiConnector:
         :return:
             Возвращает словарь.
         """
-        buffer = self.session.get(url=url)
+        buffer = self.session.get(url=url, timeout=(self.connect_timeout, self.read_timeout))
         return self.__parse_json(buffer)
 
     def get_file_from_endpoint(self, url, filename):
@@ -210,7 +220,7 @@ class ApiConnector:
             filename
                 полный путь до файла для записи.
         """
-        resp = self.session.get(url=url)
+        resp = self.session.get(url=url, timeout=(self.connect_timeout, self.read_timeout))
 
         if not resp.status_code == 200:
             self.print_error(f"Статус: {resp.status_code}")
@@ -287,7 +297,7 @@ class ApiConnector:
             self.print_error("Не указан UUID")
             return
 
-        buffer = self.session.delete(url=f'{self.get_obj_url(config_uuid)}')
+        buffer = self.session.delete(url=f'{self.get_obj_url(config_uuid)}', timeout=(self.connect_timeout, self.read_timeout))
         return self.__parse_json(buffer)
 
     def free_config_lock(self):

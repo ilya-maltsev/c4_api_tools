@@ -20,9 +20,11 @@ RUN cd gost-engine && \
     cmake --build . --target install --config Release
 
 # Stage 2: Dashboard with GOST support
-FROM python:3.10.12-bookworm
+FROM python:3.10.12-slim-bookworm
 
-RUN apt-get update && apt-get install -y --no-install-recommends gettext && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gettext libssl3 \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=gost-builder /usr/lib/x86_64-linux-gnu/engines-3/gost.so /usr/lib/x86_64-linux-gnu/engines-3/gost.so
 
@@ -32,11 +34,17 @@ ENV OPENSSL_CONF="/etc/ssl/openssl.cnf"
 
 WORKDIR /opt/app
 
+COPY c4_lib-2.0 /opt/c4_lib-2.0
 COPY c4_dashboard/requirements.txt /opt/app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir /opt/c4_lib-2.0 && \
+    cp /usr/lib/x86_64-linux-gnu/engines-3/gost.so \
+       $(python -c "import c4_lib; import os; print(os.path.dirname(c4_lib.__file__))")/gost.so && \
+    rm -rf /opt/c4_lib-2.0
 
 COPY c4_dashboard /opt/app
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py compilemessages && python manage.py migrate --noinput && python manage.py ensure_admin && python manage.py runserver 0.0.0.0:8000"]
+ENV BIND_ADDRESS="127.0.0.1:8000"
+CMD ["sh", "-c", "python manage.py compilemessages && python manage.py collectstatic --noinput && python manage.py migrate --noinput && python manage.py ensure_admin && python manage.py runserver $BIND_ADDRESS"]

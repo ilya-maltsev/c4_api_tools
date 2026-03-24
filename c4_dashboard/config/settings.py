@@ -20,6 +20,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -99,3 +100,25 @@ C4_CLIENT_CERT = os.environ.get('C4_CLIENT_CERT', '')
 C4_CLIENT_KEY = os.environ.get('C4_CLIENT_KEY', '')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+_upload_max_mb = int(os.environ.get('UPLOAD_MAX_MB', '100'))
+DATA_UPLOAD_MAX_MEMORY_SIZE = _upload_max_mb * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = _upload_max_mb * 1024 * 1024
+
+REQUEST_TIMEOUT = int(os.environ.get('REQUEST_TIMEOUT', '300'))
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'dashboard': {
+            'handlers': ['console'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+    },
+}

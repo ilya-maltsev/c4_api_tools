@@ -17,6 +17,8 @@ def get_api_connector():
     user = os.environ.get('C4_USER', 'admin')
     password = os.environ.get('C4_PASSWORD', '')
     api = c4_lib.ApiConnector(host, port, user, password)
+    api.connect_timeout = int(os.environ.get('CONNECT_TIMEOUT', '10'))
+    api.read_timeout = int(os.environ.get('REQUEST_TIMEOUT', '300'))
 
     client_cert = os.environ.get('C4_CLIENT_CERT', '')
     client_key = os.environ.get('C4_CLIENT_KEY', '')

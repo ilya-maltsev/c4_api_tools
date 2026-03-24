@@ -1,18 +1,12 @@
 # C4 API Tools — Demo Environment
 #
-# Uses pre-built images. No source code or build context required.
+# Uses pre-built images. All services on host network.
 #
 # Usage:
 #   docker compose up -d
 #   open https://localhost:8443  (login: admin / admin)
 #
 # First start takes ~30s: PostgreSQL init, PKI generation, Django migrations.
-#
-# To load example configs:
-#   docker compose cp ../examples/configs demo-c4-dashboard:/tmp/configs
-#   docker compose exec demo-c4-dashboard sh -c \
-#     'for f in /tmp/configs/*.json; do python manage.py import_config "$f"; done'
-# Or use the web UI: Configuration -> Upload JSON config file.
 
 services:
 
@@ -21,14 +15,14 @@ services:
     image: postgres:16
     container_name: demo-postgresql
     restart: unless-stopped
+    network_mode: host
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    command: postgres -c listen_addresses=127.0.0.1
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
-    networks:
-      - c4net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U monitoring -d monitoring"]
       interval: 5s
@@ -40,44 +34,22 @@ services:
     image: c4-nginx-gost:latest
     container_name: demo-nginx-gost
     restart: unless-stopped
-    ports:
-      - "8443:8443"
-      - "8444:8444"
+    network_mode: host
     volumes:
       - certs:/etc/nginx/certs
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       c4-dashboard:
         condition: service_started
-    networks:
-      - c4net
 
-  # ── C4 Config Exporter API ────────────────────────────────────────
-  c4-config-exporter:
-    image: c4-config-exporter:latest
-    container_name: demo-c4-config-exporter
-    restart: unless-stopped
-    environment:
-      C4_HOST: "${C4_HOST:-192.168.122.200}"
-      C4_PORT: "${C4_PORT:-444}"
-      C4_USER: "${C4_USER:-admin}"
-      C4_PASSWORD: "${C4_PASSWORD:-}"
-      C4_CLIENT_CERT: "/etc/c4-certs/exporter.crt"
-      C4_CLIENT_KEY: "/etc/c4-certs/exporter.key"
-      C4_CA_CERT: "/etc/c4-certs/ca.crt"
-      C4_API_PORT: "8001"
-    volumes:
-      - certs:/etc/c4-certs:ro
-    networks:
-      - c4net
-
-  # ── C4 Dashboard ──────────────────────────────────────────────────
+  # ── C4 Dashboard (c4_lib built-in) ────────────────────────────────
   c4-dashboard:
     image: c4-dashboard:latest
     container_name: demo-c4-dashboard
     restart: unless-stopped
+    network_mode: host
     environment:
-      DB_HOST: "postgresql"
+      DB_HOST: "127.0.0.1"
       DB_PORT: "5432"
       DB_NAME: "monitoring"
       DB_USER: "monitoring"
@@ -87,22 +59,18 @@ services:
       DJANGO_DEBUG: "False"
       DJANGO_ALLOWED_HOSTS: "*"
       CSRF_TRUSTED_ORIGINS: "https://localhost:8443,https://127.0.0.1:8443"
-      C4_EXPORTER_API_URL: "https://nginx-gost:8444"
-      C4_CA_CERT: "/etc/c4-certs/ca.crt"
-      C4_CLIENT_CERT: "/etc/c4-certs/dashboard.crt"
-      C4_CLIENT_KEY: "/etc/c4-certs/dashboard.key"
+      C4_HOST: "${C4_HOST:-192.168.122.200}"
+      C4_PORT: "${C4_PORT:-444}"
+      C4_USER: "${C4_USER:-admin}"
+      C4_PASSWORD: "${C4_PASSWORD:-}"
+      CONNECT_TIMEOUT: "${CONNECT_TIMEOUT:-10}"
+      REQUEST_TIMEOUT: "${REQUEST_TIMEOUT:-300}"
     volumes:
       - certs:/etc/c4-certs:ro
     depends_on:
       postgresql:
         condition: service_healthy
-    networks:
-      - c4net
 
 volumes:
   pg_data:
   certs:
-
-networks:
-  c4net:
-    driver: bridge
