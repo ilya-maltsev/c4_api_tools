@@ -10,7 +10,7 @@
 |---|---|
 | ![Login](screens/1.png) | ![Dashboard](screens/2.png) |
 
-| Журналы ЦУС | Журналы ЦУС (системный) |
+| Журналы ЦУС (МЭ) | Журналы ЦУС (системный) |
 |---|---|
 | ![Logs IDS](screens/3.png) | ![Logs System](screens/4.png) |
 
