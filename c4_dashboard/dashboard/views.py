@@ -224,6 +224,9 @@ def export_configs_api(request):
     from datetime import datetime
     from django.http import HttpResponse
     from . import c4_connector
+    from .config_converter import convert
+
+    fmt = request.GET.get('format', 'universal')
 
     try:
         gateways = c4_connector.get_all_configs()
@@ -238,10 +241,19 @@ def export_configs_api(request):
     with tarfile.open(fileobj=buf, mode='w:gz') as tar:
         for gw in gateways:
             name = gw.get('name', gw.get('hwserial', 'unknown'))
-            config_json = json.dumps(gw.get('config', {}), indent=2, ensure_ascii=False).encode('utf-8')
-            info = tarfile.TarInfo(name=f"{name}_config.json")
-            info.size = len(config_json)
-            tar.addfile(info, io.BytesIO(config_json))
+            config = gw.get('config', {})
+
+            if fmt == 'raw':
+                content = config
+                filename = f"{name}_config.json"
+            else:
+                content = convert(config)
+                filename = f"{name}_universal.json"
+
+            config_bytes = json.dumps(content, indent=2, ensure_ascii=False).encode('utf-8')
+            info = tarfile.TarInfo(name=filename)
+            info.size = len(config_bytes)
+            tar.addfile(info, io.BytesIO(config_bytes))
 
     buf.seek(0)
     response = HttpResponse(buf.read(), content_type='application/gzip')

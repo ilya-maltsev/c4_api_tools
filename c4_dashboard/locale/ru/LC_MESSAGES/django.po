@@ -747,3 +747,18 @@ msgstr "Платформа"
 
 msgid "All indexes already exist"
 msgstr "Все индексы уже существуют"
+
+msgid "Universal JSON"
+msgstr "Универсальный JSON"
+
+msgid "rules + objects"
+msgstr "правила + объекты"
+
+msgid "Raw JSON"
+msgstr "Исходный JSON"
+
+msgid "full config"
+msgstr "полная конфигурация"
+
+msgid "Format"
+msgstr "Формат"
