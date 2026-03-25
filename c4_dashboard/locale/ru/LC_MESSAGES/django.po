@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-25 13:22+0000\n"
+"POT-Creation-Date: 2026-03-25 15:02+0000\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
@@ -393,11 +393,21 @@ msgstr "каждую 1 мин"
 msgid "every 5 min"
 msgstr "каждые 5 мин"
 
+#, fuzzy
+msgid "Export Policies"
+msgstr "Экспорт политик"
+
+msgid "Columns"
+msgstr "Столбцы"
+
 msgid "Show"
 msgstr "Показать"
 
 msgid "entries"
 msgstr "записей"
+
+msgid "Select all"
+msgstr "Выбрать все"
 
 msgid "Destination"
 msgstr "Назначение"
@@ -657,9 +667,6 @@ msgstr "Вы уверены? Все данные конфигурации буд
 
 msgid "Index"
 msgstr "Индекс"
-
-msgid "Columns"
-msgstr "Столбцы"
 
 msgid "Missing"
 msgstr "Отсутствует"

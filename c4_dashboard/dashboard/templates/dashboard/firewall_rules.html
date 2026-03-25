@@ -27,12 +27,18 @@
         <option value="300000" selected>{% trans "every 5 min" %}</option>
     </select>
     <span id="counter-status" style="font-size:12px;color:#95a5a6"></span>
-    <span style="margin-left:auto" class="toolbar-label">{% trans "Show" %} <select id="page-length" class="toolbar-select" style="width:60px"><option>10</option><option selected>25</option><option>50</option><option>100</option></select> {% trans "entries" %}</span>
+    <button id="export-policies-btn" class="btn btn-default" style="margin-left:auto;padding:3px 12px;font-size:12px" disabled><i class="fa fa-download"></i> {% trans "Export Policies" %}</button>
+    <div class="colvis-wrap">
+        <button type="button" class="btn btn-default colvis-btn" id="colvis-toggle" style="padding:3px 12px;font-size:12px"><i class="fa fa-columns"></i> {% trans "Columns" %}</button>
+        <div class="colvis-menu" id="colvis-menu"></div>
+    </div>
+    <span class="toolbar-label">{% trans "Show" %} <select id="page-length" class="toolbar-select" style="width:60px"><option>10</option><option selected>25</option><option>50</option><option>100</option></select> {% trans "entries" %}</span>
 </div>
 
 <div class="table-wrap">
     <table class="datatable" id="fw-table">
         <thead><tr>
+            <th style="width:30px;text-align:center" data-orderable="false"><input type="checkbox" id="select-all-rules" title="{% trans 'Select all' %}"></th>
             <th style="width:30px">#</th>
             <th>{% trans "Name" %}</th>
             <th>{% trans "Source" %}</th>
@@ -47,6 +53,7 @@
         <tbody>
         {% for rule in rules %}
         <tr>
+            <td style="text-align:center"><input type="checkbox" class="rule-select" value="{{ rule.name }}"></td>
             <td>{{ rule.position }}</td>
             <td><strong>{{ rule.name }}</strong></td>
             <td class="obj-cell">{% if rule.is_inverse_src %}<span class="obj-inv">NOT</span> {% endif %}{% for obj in rule.source_display_list %}<span class="obj-chip" data-name="{{ obj.name }}" data-type="{{ obj.subtype|default:'group' }}" data-ip="{{ obj.ip|default:'' }}">{{ obj.name }}</span>{% empty %}<span class="obj-chip">any</span>{% endfor %}</td>
@@ -116,6 +123,124 @@ fetchCounters();
 // Page length selector
 $('#page-length').change(function() {
     $('.datatable').DataTable().page.len(parseInt(this.value)).draw();
+});
+
+// Column visibility toggle
+$(document).ready(function() {
+    var STORAGE_KEY = 'colvis_fw_v2';
+    var dt = $.fn.dataTable.Api('#fw-table');
+    var $menu = $('#colvis-menu');
+    var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+    dt.columns().every(function(idx) {
+        var title = $(this.header()).text().trim();
+        if (!title) return;
+        var visible = saved.hasOwnProperty(idx) ? saved[idx] : true;
+        dt.column(idx).visible(visible);
+        var $label = $('<label><input type="checkbox" data-col="' + idx + '"' + (visible ? ' checked' : '') + '> ' + title + '</label>');
+        $menu.append($label);
+    });
+
+    $menu.on('change', 'input', function() {
+        var idx = parseInt($(this).data('col'));
+        var vis = this.checked;
+        dt.column(idx).visible(vis);
+        var state = {};
+        $menu.find('input').each(function() { state[$(this).data('col')] = this.checked; });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    });
+
+    $('#colvis-toggle').on('click', function(e) {
+        e.stopPropagation();
+        $menu.toggleClass('open');
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.colvis-wrap').length) $menu.removeClass('open');
+    });
+});
+
+// Export selected policies
+$(document).ready(function() {
+    // Hide filter for checkbox column
+    $('.col-filter-row th:first-child .col-filter-input').prop('disabled', true).css('visibility', 'hidden');
+
+    function updateExportButton() {
+        var count = $('#fw-table tbody .rule-select:checked').length;
+        var $btn = $('#export-policies-btn');
+        if (count > 0) {
+            $btn.prop('disabled', false);
+            $btn.html('<i class="fa fa-download"></i> {% trans "Export Policies" %} (' + count + ')');
+        } else {
+            $btn.prop('disabled', true);
+            $btn.html('<i class="fa fa-download"></i> {% trans "Export Policies" %}');
+        }
+    }
+
+    $('#select-all-rules').on('change', function() {
+        $('#fw-table tbody .rule-select').prop('checked', this.checked);
+        updateExportButton();
+    });
+
+    $('#fw-table tbody').on('change', '.rule-select', function() {
+        var all = $('#fw-table tbody .rule-select');
+        $('#select-all-rules').prop('checked', all.length === all.filter(':checked').length);
+        updateExportButton();
+    });
+
+    $('#export-policies-btn').on('click', function() {
+        var names = [];
+        $('#fw-table tbody .rule-select:checked').each(function() {
+            names.push($(this).val());
+        });
+        if (!names.length) return;
+
+        var $btn = $(this);
+        var exportLabel = '<i class="fa fa-download"></i> {% trans "Export Policies" %}';
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> {% trans "Connecting to C4 Exporter API..." %}');
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '{% url "export_policies" %}', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+        xhr.responseType = 'blob';
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var filename = 'c4_policies.json';
+                var disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition) {
+                    var match = disposition.match(/filename="(.+?)"/);
+                    if (match) filename = match[1];
+                }
+                var url = URL.createObjectURL(xhr.response);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                // Read error blob as text
+                var reader = new FileReader();
+                reader.onload = function() {
+                    var msg = '{% trans "Export failed" %}';
+                    try { msg = JSON.parse(reader.result).error || msg; } catch(e) {}
+                    showToast(msg, 'error');
+                };
+                reader.readAsText(xhr.response);
+            }
+            updateExportButton();
+        };
+
+        xhr.onerror = function() {
+            showToast('{% trans "Connection failed" %}', 'error');
+            updateExportButton();
+        };
+
+        xhr.send(JSON.stringify({names: names}));
+    });
 });
 
 // Tooltip for network object chips

@@ -21,6 +21,7 @@ urlpatterns = [
     path('configuration/', views.config_view, name='configuration'),
     path('import/', views.config_view, name='import_config'),
     path('api/export-configs/', views.export_configs_api, name='export_configs'),
+    path('api/export-policies/', views.export_policies_api, name='export_policies'),
     path('sync/', views.sync_from_c4_view, name='sync_from_c4'),
     path('api/sync-list/', views.sync_list_gateways_api, name='sync_list_gateways'),
     path('api/sync-gateway/', views.sync_gateway_api, name='sync_gateway'),

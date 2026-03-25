@@ -262,6 +262,60 @@ def export_configs_api(request):
 
 
 @login_required
+def export_policies_api(request):
+    """Export selected firewall policies with related objects as unified JSON."""
+    from datetime import datetime
+    from django.http import HttpResponse
+    from . import c4_connector
+    from .config_converter import convert
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        body = json.loads(request.body)
+        names = body.get('names', [])
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    if not names or not isinstance(names, list):
+        return JsonResponse({'error': 'names list required'}, status=400)
+
+    names_set = set(names)
+
+    try:
+        gateways = c4_connector.get_all_configs()
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)
+
+    if not gateways:
+        return JsonResponse({'error': 'No configs returned'}, status=404)
+
+    result = []
+    seen_uuids = set()
+
+    for gw in gateways:
+        config = gw.get('config', {})
+        converted = convert(config)
+        for rule in converted:
+            rule_uuid = rule.get('uuid', '')
+            if rule.get('name') in names_set and rule_uuid not in seen_uuids:
+                seen_uuids.add(rule_uuid)
+                result.append(rule)
+
+    if not result:
+        return JsonResponse({'error': 'No matching policies found'}, status=404)
+
+    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    response = HttpResponse(
+        json.dumps(result, indent=2, ensure_ascii=False),
+        content_type='application/json',
+    )
+    response['Content-Disposition'] = f'attachment; filename="c4_policies_{ts}.json"'
+    return response
+
+
+@login_required
 def sync_list_gateways_api(request):
     """Step 1: List available gateways from C4."""
     from . import c4_connector

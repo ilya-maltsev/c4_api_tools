@@ -23,6 +23,7 @@ LINK_TYPE_MAP = {
 def _process_fwrule(obj):
     return {
         'type': 'fwrule',
+        'uuid': obj.get('uuid', ''),
         'name': obj.get('name', ''),
         'description': obj.get('description', ''),
         'is_enabled': obj.get('is_enabled', True),
@@ -44,6 +45,7 @@ def _process_fwrule(obj):
 def _process_natrule(obj):
     return {
         'type': 'natrule',
+        'uuid': obj.get('uuid', ''),
         'name': obj.get('name', ''),
         'description': obj.get('description', ''),
         'is_enabled': obj.get('is_enabled', True),
@@ -61,6 +63,7 @@ def _process_natrule(obj):
 
 def _convert_obj(obj):
     out = {
+        'uuid': obj.get('uuid', ''),
         'name': obj.get('name', ''),
         'description': obj.get('description', ''),
         'type': obj['type'],
