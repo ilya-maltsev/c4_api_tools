@@ -7,50 +7,52 @@
     <title>{% block title %}{% trans "Continent 4 Dashboard" %}{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'dashboard/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'dashboard/style.css' %}">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="{% static 'dashboard/vendor/datatables/jquery.dataTables.min.css' %}">
+    <link rel="stylesheet" href="{% static 'dashboard/vendor/font-awesome/css/font-awesome.min.css' %}">
 </head>
 <body>
     <nav class="sidebar">
         <div class="sidebar-brand"><span>C4</span> Dashboard</div>
+        <button class="sidebar-toggle" id="sidebar-toggle" title="{% trans 'Collapse menu' %}" data-title-collapse="{% trans 'Collapse menu' %}" data-title-expand="{% trans 'Expand menu' %}"><span class="toggle-collapse">&#8656;</span><span class="toggle-expand">&#8658;</span></button>
 
         <div class="sidebar-section">{% trans "Monitor" %}</div>
-        <a href="{% url 'dashboard' %}" class="{% if page == 'dashboard' %}active{% endif %}">
-            <span class="icon">&#9679;</span> {% trans "Dashboard" %}
+        <a href="{% url 'dashboard' %}" class="{% if page == 'dashboard' %}active{% endif %}" data-tooltip="{% trans 'Dashboard' %}">
+            <span class="icon"><i class="fa fa-tachometer"></i></span> {% trans "Dashboard" %}
         </a>
-        <a href="{% url 'logs' %}" class="{% if page == 'logs' %}active{% endif %}">
-            <span class="icon">&#9776;</span> {% trans "Logs" %}
+        <a href="{% url 'logs' %}" class="{% if page == 'logs' %}active{% endif %}" data-tooltip="{% trans 'Logs' %}">
+            <span class="icon"><i class="fa fa-file-text-o"></i></span> {% trans "Logs" %}
         </a>
 
         <div class="sidebar-section">{% trans "Policy & Objects" %}</div>
-        <a href="{% url 'firewall_rules' %}" class="{% if page == 'firewall_rules' %}active{% endif %}">
-            <span class="icon">&#9730;</span> {% trans "Firewall Rules" %}
+        <a href="{% url 'firewall_rules' %}" class="{% if page == 'firewall_rules' %}active{% endif %}" data-tooltip="{% trans 'Firewall Rules' %}">
+            <span class="icon">&#9641;</span> {% trans "Firewall Rules" %}
         </a>
-        <a href="{% url 'network_objects' %}" class="{% if page == 'network_objects' %}active{% endif %}">
-            <span class="icon">&#9641;</span> {% trans "Network Objects" %}
+        <a href="{% url 'network_objects' %}" class="{% if page == 'network_objects' %}active{% endif %}" data-tooltip="{% trans 'Network Objects' %}">
+            <span class="icon"><i class="fa fa-sitemap"></i></span> {% trans "Network Objects" %}
         </a>
-        <a href="{% url 'service_objects' %}" class="{% if page == 'service_objects' %}active{% endif %}">
-            <span class="icon">&#9881;</span> {% trans "Service Objects" %}
+        <a href="{% url 'service_objects' %}" class="{% if page == 'service_objects' %}active{% endif %}" data-tooltip="{% trans 'Service Objects' %}">
+            <span class="icon"><i class="fa fa-gears"></i></span> {% trans "Service Objects" %}
         </a>
-        <a href="{% url 'applications' %}" class="{% if page == 'applications' %}active{% endif %}">
-            <span class="icon">&#9851;</span> {% trans "Applications" %}
+        <a href="{% url 'applications' %}" class="{% if page == 'applications' %}active{% endif %}" data-tooltip="{% trans 'Applications' %}">
+            <span class="icon"><i class="fa fa-desktop"></i></span> {% trans "Applications" %}
         </a>
 
         <div class="sidebar-section">{% trans "Security" %}</div>
-        <a href="{% url 'certificates' %}" class="{% if page == 'certificates' %}active{% endif %}">
-            <span class="icon">&#9871;</span> {% trans "Certificates" %}
+        <a href="{% url 'certificates' %}" class="{% if page == 'certificates' %}active{% endif %}" data-tooltip="{% trans 'Certificates' %}">
+            <span class="icon"><i class="fa fa-id-card"></i></span> {% trans "Certificates" %}
         </a>
 
         <div class="sidebar-section">{% trans "System" %}</div>
-        <a href="{% url 'admins' %}" class="{% if page == 'admins' %}active{% endif %}">
-            <span class="icon">&#9733;</span> {% trans "Administrators" %}
+        <a href="{% url 'admins' %}" class="{% if page == 'admins' %}active{% endif %}" data-tooltip="{% trans 'Administrators' %}">
+            <span class="icon"><i class="fa fa-id-badge"></i></span> {% trans "Administrators" %}
         </a>
-        <a href="{% url 'password_policy' %}" class="{% if page == 'password_policy' %}active{% endif %}">
-            <span class="icon">&#9878;</span> {% trans "Password Policy" %}
+        <a href="{% url 'password_policy' %}" class="{% if page == 'password_policy' %}active{% endif %}" data-tooltip="{% trans 'Password Policy' %}">
+            <span class="icon"><i class="fa fa-key"></i></span> {% trans "Password Policy" %}
         </a>
-        <a href="{% url 'configuration' %}" class="{% if page == 'configuration' %}active{% endif %}">
-            <span class="icon">&#10515;</span> {% trans "Configuration" %}
+        <a href="{% url 'configuration' %}" class="{% if page == 'configuration' %}active{% endif %}" data-tooltip="{% trans 'Configuration' %}">
+            <span class="icon">&#9881;</span> {% trans "Configuration" %}
         </a>
-        <a href="{% url 'maintenance' %}" class="{% if page == 'maintenance' %}active{% endif %}">
+        <a href="{% url 'maintenance' %}" class="{% if page == 'maintenance' %}active{% endif %}" data-tooltip="{% trans 'Maintenance' %}">
             <span class="icon">&#9874;</span> {% trans "Maintenance" %}
         </a>
 
@@ -71,9 +73,9 @@
         </div>
 
         <div style="flex:1"></div>
-        <div style="border-top:1px solid var(--fi-border);padding:8px 16px">
+        <div style="border-top:1px solid var(--fi-border);padding:8px 16px" class="sidebar-logout">
             <a href="{% url 'logout' %}" style="color:var(--fi-error);font-size:12px;text-decoration:none;display:flex;align-items:center;gap:6px">
-                <span>&#10140;</span> {% trans "Logout" %} ({{ request.user.username }})
+                <span>&#10140;</span> <span class="sidebar-text">{% trans "Logout" %} ({{ request.user.username }})</span>
             </a>
         </div>
     </nav>
@@ -111,9 +113,24 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script>
+        // Restore sidebar state before render to avoid flash
+        if (localStorage.getItem('sidebarCollapsed') === '1') {
+            document.body.classList.add('sidebar-collapsed');
+            var btn = document.getElementById('sidebar-toggle');
+            if (btn) btn.title = btn.dataset.titleExpand;
+        }
+    </script>
+    <script src="{% static 'dashboard/vendor/jquery/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'dashboard/vendor/datatables/jquery.dataTables.min.js' %}"></script>
+    <script>
+        // Sidebar toggle
+        $('#sidebar-toggle').click(function() {
+            document.body.classList.toggle('sidebar-collapsed');
+            var collapsed = document.body.classList.contains('sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
+            this.title = collapsed ? this.dataset.titleExpand : this.dataset.titleCollapse;
+        });
         function showConfirm(message, callback, title) {
             var $modal = $('#confirm-modal');
             $('#confirm-title').text(title || '{% trans "Confirmation" %}');

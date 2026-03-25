@@ -1,8 +1,12 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-25 13:22+0000\n"
 "Language: ru\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
 
 msgid "Russian"
 msgstr "Русский"
@@ -10,44 +14,41 @@ msgstr "Русский"
 msgid "English"
 msgstr "Английский"
 
-msgid "Continent 4 Dashboard"
-msgstr "Панель управления Континент 4"
-
-msgid "Continent 4 Configuration Dashboard"
-msgstr "Панель конфигурации Континент 4"
+msgid "Administrators"
+msgstr "Администраторы"
 
 msgid "Continent 4"
 msgstr "Континент 4"
 
-msgid "Monitor"
-msgstr "Мониторинг"
+msgid "Login"
+msgstr "Вход"
 
-msgid "Dashboard"
-msgstr "Обзор"
+msgid "Full Name"
+msgstr "Полное имя"
 
-msgid "Network"
-msgstr "Сеть"
+msgid "Status"
+msgstr "Статус"
 
-msgid "Interfaces"
-msgstr "Интерфейсы"
+msgid "Password Auth"
+msgstr "Парольная аутентификация"
 
-msgid "Network Interfaces"
-msgstr "Сетевые интерфейсы"
+msgid "Cert Auth"
+msgstr "Аутентификация по сертификату"
 
-msgid "Static Routes"
-msgstr "Статические маршруты"
+msgid "Password Expires"
+msgstr "Срок действия пароля"
 
-msgid "Services"
-msgstr "Сервисы"
+msgid "Created"
+msgstr "Создан"
 
-msgid "Network Services"
-msgstr "Сетевые сервисы"
+msgid "Active"
+msgstr "Активен"
 
-msgid "Policy & Objects"
-msgstr "Политики и объекты"
+msgid "Disabled"
+msgstr "Отключено"
 
-msgid "Firewall Rules"
-msgstr "Правила МЭ"
+msgid "Yes"
+msgstr "Да"
 
 msgid "App Exceptions"
 msgstr "Исключения приложений"
@@ -55,65 +56,11 @@ msgstr "Исключения приложений"
 msgid "Application Exceptions"
 msgstr "Исключения приложений"
 
-msgid "Security"
-msgstr "Безопасность"
+msgid "Name"
+msgstr "Имя"
 
-msgid "DDoS Protection"
-msgstr "Защита от DDoS"
-
-msgid "Certificates"
-msgstr "Сертификаты"
-
-msgid "System"
-msgstr "Система"
-
-msgid "Administrators"
-msgstr "Администраторы"
-
-msgid "Password Policy"
-msgstr "Парольная политика"
-
-msgid "Import Config"
-msgstr "Импорт конфигурации"
-
-msgid "Import Configuration"
-msgstr "Импорт конфигурации"
-
-msgid "Language"
-msgstr "Язык"
-
-msgid "Filter:"
-msgstr "Фильтр:"
-
-msgid "Sync from Continent 4"
-msgstr "Синхронизация с Континент 4"
-
-msgid "Sync from C4"
-msgstr "Синхронизация с К4"
-
-msgid "Gateway"
-msgstr "Шлюз"
-
-msgid "Domain"
-msgstr "Домен"
-
-msgid "Status"
-msgstr "Статус"
-
-msgid "Active policy rules"
-msgstr "Активные правила политики"
-
-msgid "Enabled"
-msgstr "Включено"
-
-msgid "Disabled"
-msgstr "Отключено"
-
-msgid "Total"
-msgstr "Всего"
-
-msgid "Action"
-msgstr "Действие"
+msgid "Address"
+msgstr "Адрес"
 
 msgid "ON"
 msgstr "ВКЛ"
@@ -121,32 +68,107 @@ msgstr "ВКЛ"
 msgid "OFF"
 msgstr "ВЫКЛ"
 
-msgid "Installed certificates"
-msgstr "Установленные сертификаты"
+msgid "Applications"
+msgstr "Приложения"
 
-msgid "Last Import"
-msgstr "Последний импорт"
+msgid "Category"
+msgstr "Категория"
 
-msgid "objects"
-msgstr "объектов"
+msgid "Description"
+msgstr "Описание"
 
-msgid "No data imported yet"
-msgstr "Данные еще не импортированы"
+msgid "Continent 4 Dashboard"
+msgstr "Панель управления Континент 4"
 
-msgid "Name"
-msgstr "Имя"
+msgid "Collapse menu"
+msgstr "Свернуть меню"
 
-msgid "Addresses"
-msgstr "Адреса"
+msgid "Expand menu"
+msgstr "Развернуть меню"
 
-msgid "Usage"
-msgstr "Назначение"
+msgid "Monitor"
+msgstr "Мониторинг"
 
-msgid "UP"
-msgstr "Активен"
+msgid "Dashboard"
+msgstr "Обзор"
 
-msgid "DOWN"
-msgstr "Неактивен"
+msgid "Logs"
+msgstr "Журналы"
+
+msgid "Policy & Objects"
+msgstr "Политики и объекты"
+
+msgid "Firewall Rules"
+msgstr "Правила МЭ"
+
+msgid "Network Objects"
+msgstr "Сетевые объекты"
+
+msgid "Service Objects"
+msgstr "Объекты сервисов"
+
+msgid "Security"
+msgstr "Безопасность"
+
+msgid "Certificates"
+msgstr "Сертификаты"
+
+msgid "System"
+msgstr "Система"
+
+msgid "Password Policy"
+msgstr "Парольная политика"
+
+msgid "Configuration"
+msgstr "Конфигурация"
+
+msgid "Maintenance"
+msgstr "Обслуживание"
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "Logout"
+msgstr "Выход"
+
+msgid "Continent 4 Configuration Dashboard"
+msgstr "Панель конфигурации Континент 4"
+
+msgid "Confirmation"
+msgstr "Подтверждение"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Confirm"
+msgstr "Подтвердить"
+
+msgid "Filter:"
+msgstr "Фильтр:"
+
+msgid "Show _MENU_ entries"
+msgstr "Показать _MENU_ записей"
+
+msgid "Showing _START_ to _END_ of _TOTAL_ entries"
+msgstr "Записи с _START_ по _END_ из _TOTAL_"
+
+msgid "No entries"
+msgstr "Нет записей"
+
+msgid "filtered from _MAX_ total"
+msgstr "отфильтровано из _MAX_"
+
+msgid "No matching records found"
+msgstr "Совпадений не найдено"
+
+msgid "No data available"
+msgstr "Нет данных"
+
+msgid "Previous"
+msgstr "Назад"
+
+msgid "Next"
+msgstr "Вперед"
 
 msgid "Subject"
 msgstr "Субъект"
@@ -166,38 +188,165 @@ msgstr "Действителен с"
 msgid "Valid Until"
 msgstr "Действителен до"
 
-msgid "Destination"
-msgstr "Назначение"
+msgid "Export configs from Continent 4"
+msgstr "Экспорт конфигураций из Континент 4"
 
-msgid "Metric"
-msgstr "Метрика"
+msgid "Download all gateway configurations as tar.gz archive."
+msgstr "Скачать конфигурации всех шлюзов в архиве tar.gz."
 
-msgid "Default"
-msgstr "По умолчанию"
+msgid "Format"
+msgstr "Формат"
 
-msgid "Service"
-msgstr "Сервис"
+msgid "Universal JSON"
+msgstr "Универсальный JSON"
 
-msgid "Logging"
-msgstr "Логирование"
+msgid "rules + objects"
+msgstr "правила + объекты"
 
-msgid "Src Inv."
-msgstr "Инв. ист."
+msgid "Raw JSON"
+msgstr "Исходный JSON"
 
-msgid "Dst Inv."
-msgstr "Инв. назн."
+msgid "full config"
+msgstr "полная конфигурация"
 
-msgid "Priority"
-msgstr "Приоритет"
+msgid "Export configs"
+msgstr "Экспорт конфигураций"
 
-msgid "Yes"
-msgstr "Да"
+msgid "Sync from Continent 4"
+msgstr "Синхронизация с Континент 4"
 
-msgid "No"
-msgstr "Нет"
+msgid "Fetch configs directly from C4 via the Exporter API."
+msgstr "Загрузка конфигураций напрямую из К4 через API экспортера."
+
+msgid "Sync from C4"
+msgstr "Синхронизация с К4"
+
+msgid "Upload JSON config file"
+msgstr "Загрузить JSON-файл конфигурации"
+
+msgid "Upload a configuration JSON file exported by c4_config_exporter."
+msgstr ""
+"Загрузите JSON-файл конфигурации, экспортированный через c4_config_exporter."
+
+msgid "Import File"
+msgstr "Импортировать файл"
+
+msgid "Import History"
+msgstr "История импортов"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Gateway"
+msgstr "Шлюз"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "Objects"
+msgstr "Объекты"
+
+msgid "Connecting to C4 Exporter API..."
+msgstr "Подключение к API экспортера К4..."
+
+msgid "Fetching configurations from Continent 4..."
+msgstr "Загрузка конфигураций из Континент 4..."
+
+msgid "Packing archive..."
+msgstr "Упаковка архива..."
+
+msgid "Export completed successfully"
+msgstr "Экспорт завершен успешно"
+
+msgid "Error"
+msgstr ""
+
+msgid "Export failed"
+msgstr "Ошибка экспорта"
+
+msgid "Completed"
+msgstr "Завершено"
+
+msgid "Sync completed successfully"
+msgstr "Синхронизация завершена успешно"
+
+msgid "objects"
+msgstr "объектов"
+
+msgid "Importing data to database..."
+msgstr "Импорт данных в базу данных..."
+
+msgid "Connection failed"
+msgstr "Ошибка подключения"
+
+msgid "Reading file..."
+msgstr "Чтение файла..."
+
+msgid "Uploading..."
+msgstr "Загрузка..."
+
+msgid "Import completed successfully"
+msgstr "Импорт завершен успешно"
+
+msgid "Import failed"
+msgstr "Ошибка импорта"
+
+msgid "Gateways"
+msgstr "Шлюзы"
+
+msgid "Security nodes"
+msgstr "Узлы безопасности"
+
+msgid "Enabled"
+msgstr "Включено"
+
+msgid "Total"
+msgstr "Всего"
+
+msgid "Hosts and subnets"
+msgstr "Хосты и подсети"
+
+msgid "Protocols and ports"
+msgstr "Протоколы и порты"
+
+msgid "L7 applications"
+msgstr "Приложения L7"
+
+msgid "Object Groups"
+msgstr "Группы объектов"
+
+msgid "Groups"
+msgstr "Группы"
+
+msgid "Installed certificates"
+msgstr "Установленные сертификаты"
+
+msgid "Admin accounts"
+msgstr "Учетные записи"
+
+msgid "Platform"
+msgstr "Платформа"
 
 msgid "Mode"
 msgstr "Режим"
+
+msgid "Domains"
+msgstr "Домены"
+
+msgid "Recent imports"
+msgstr "Последние импорты"
+
+msgid "Source"
+msgstr "Источник"
+
+msgid "No data imported yet"
+msgstr "Данные еще не импортированы"
+
+msgid "DDoS Protection"
+msgstr "Защита от DDoS"
+
+msgid "Action"
+msgstr "Действие"
 
 msgid "Blocking Time"
 msgstr "Время блокировки"
@@ -208,44 +357,330 @@ msgstr "с"
 msgid "Attack Type"
 msgstr "Тип атаки"
 
-msgid "Address"
-msgstr "Адрес"
+msgid "CUS log database is not connected."
+msgstr "БД логов ЦУС не подключена."
 
-msgid "VPN Configuration"
-msgstr "Конфигурация VPN"
+msgid "Counter is unavailable."
+msgstr "Счетчик недоступен."
 
-msgid "Session Breakup"
-msgstr "Разрыв сессий"
+msgid "Configure connection"
+msgstr "Настроить подключение"
 
-msgid "Log Tunnel Status"
-msgstr "Логирование статуса туннеля"
+msgid "Counter interval"
+msgstr "Интервал счетчика"
 
-msgid "Dynamic Records Lifetime"
-msgstr "Время жизни динамических записей"
+msgid "5 minutes"
+msgstr "5 минут"
 
-msgid "No VPN configuration found."
-msgstr "Конфигурация VPN не найдена."
+msgid "1 hour"
+msgstr "1 час"
 
-msgid "Login"
-msgstr "Вход"
+msgid "1 day"
+msgstr "1 день"
 
-msgid "Full Name"
-msgstr "Полное имя"
+msgid "1 week"
+msgstr "1 неделя"
 
-msgid "Password Auth"
-msgstr "Парольная аутентификация"
+msgid "Refresh"
+msgstr "Обновить"
 
-msgid "Cert Auth"
-msgstr "Аутентификация по сертификату"
+msgid "Auto-update"
+msgstr "Автообновление"
 
-msgid "Password Expires"
-msgstr "Срок действия пароля"
+msgid "every 1 min"
+msgstr "каждую 1 мин"
 
-msgid "Created"
-msgstr "Создан"
+msgid "every 5 min"
+msgstr "каждые 5 мин"
 
-msgid "Active"
+msgid "Show"
+msgstr "Показать"
+
+msgid "entries"
+msgstr "записей"
+
+msgid "Destination"
+msgstr "Назначение"
+
+msgid "Service"
+msgstr "Сервис"
+
+msgid "Application"
+msgstr "Приложение"
+
+msgid "Counter"
+msgstr "Счетчик"
+
+msgid "Logging"
+msgstr "Логирование"
+
+msgid "Install on"
+msgstr "Установить на"
+
+msgid "Everywhere"
+msgstr "Везде"
+
+msgid "Protocol"
+msgstr "Протокол"
+
+msgid "Port"
+msgstr "Порт"
+
+msgid "Group"
+msgstr "Группа"
+
+msgid "Type"
+msgstr "Тип"
+
+msgid "Import Config"
+msgstr "Импорт конфигурации"
+
+msgid "Import Configuration"
+msgstr "Импорт конфигурации"
+
+msgid "Interfaces"
+msgstr "Интерфейсы"
+
+msgid "Network Interfaces"
+msgstr "Сетевые интерфейсы"
+
+msgid "Addresses"
+msgstr "Адреса"
+
+msgid "Usage"
+msgstr "Назначение"
+
+msgid "UP"
 msgstr "Активен"
+
+msgid "DOWN"
+msgstr "Неактивен"
+
+msgid "Invalid username or password."
+msgstr "Неверное имя пользователя или пароль."
+
+msgid "Username"
+msgstr "Имя пользователя"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "Sign In"
+msgstr "Войти"
+
+msgid "Logs are unavailable."
+msgstr "Журналы недоступны."
+
+msgid "Log type"
+msgstr "Тип журнала"
+
+msgid "System Log"
+msgstr "Системный журнал"
+
+msgid "Management Log"
+msgstr "Журнал управления"
+
+msgid "IDS / Firewall Log"
+msgstr "Журнал IDS / МЭ"
+
+msgid "Interval"
+msgstr "Интервал"
+
+msgid "Limit"
+msgstr "Лимит"
+
+msgid "Timestamp"
+msgstr "Время"
+
+msgid "Severity"
+msgstr "Критичность"
+
+msgid "Hostname"
+msgstr "Узел"
+
+msgid "Message"
+msgstr "Сообщение"
+
+msgid "Event"
+msgstr "Событие"
+
+msgid "Source IP"
+msgstr "IP источника"
+
+msgid "Dest IP"
+msgstr "IP назначения"
+
+msgid "Signature"
+msgstr "Сигнатура"
+
+msgid "Rule"
+msgstr "Правило"
+
+msgid "records"
+msgstr "записей"
+
+msgid "CUS Log Database"
+msgstr "БД логов ЦУС"
+
+msgid "Connected"
+msgstr "Подключено"
+
+msgid "Not configured"
+msgstr "Не настроено"
+
+msgid ""
+"Connection to external CUS database with logs (ids_log, log, management_log)."
+msgstr ""
+"Подключение к внешней БД ЦУС с журналами (ids_log, log, management_log)."
+
+msgid "Host"
+msgstr "Хост"
+
+msgid "Database"
+msgstr "База данных"
+
+msgid "User"
+msgstr "Пользователь"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Test connection"
+msgstr "Проверить подключение"
+
+msgid "CUS Log Database Indexes"
+msgstr "Индексы БД логов ЦУС"
+
+msgid "Loading..."
+msgstr "Загрузка..."
+
+msgid "CUS Log Database info"
+msgstr "Информация о БД логов ЦУС"
+
+msgid "CUS Log Auto-Cleanup"
+msgstr "Автоочистка логов ЦУС"
+
+msgid "starting"
+msgstr "запуск"
+
+msgid ""
+"Delete old records from CUS log tables in batches without locking. Runs "
+"VACUUM ANALYZE after cleanup."
+msgstr ""
+"Удаление старых записей из таблиц логов ЦУС батчами без блокировки. После "
+"очистки выполняется VACUUM ANALYZE."
+
+msgid "Enable auto-cleanup"
+msgstr "Включить автоочистку"
+
+msgid "minutes"
+msgstr "минут"
+
+msgid "hour"
+msgstr "час"
+
+msgid "hours"
+msgstr "часов"
+
+msgid "Retention"
+msgstr "Хранение"
+
+msgid "days"
+msgstr "дн."
+
+msgid "Batch size"
+msgstr "Размер батча"
+
+msgid "Tables"
+msgstr "Таблицы"
+
+msgid "Run now"
+msgstr "Запустить"
+
+msgid "Last run"
+msgstr "Последний запуск"
+
+msgid "Clear dashboard database"
+msgstr "Очистить базу данных панели"
+
+msgid ""
+"Delete all imported configuration data. User accounts and Django settings "
+"will not be affected."
+msgstr ""
+"Удалить все импортированные данные конфигурации. Учетные записи "
+"пользователей и настройки Django затронуты не будут."
+
+msgid "Clear database"
+msgstr "Очистить базу данных"
+
+msgid "Dashboard Database statistics"
+msgstr "Статистика базы данных панели"
+
+msgid "Domain"
+msgstr "Домен"
+
+msgid "Static Routes"
+msgstr "Статические маршруты"
+
+msgid "Services"
+msgstr "Сервисы"
+
+msgid "Table"
+msgstr "Таблица"
+
+msgid "Size"
+msgstr ""
+
+msgid "Records"
+msgstr "Записи"
+
+msgid "Cleanup"
+msgstr "Очистка"
+
+msgid "older than"
+msgstr "старше"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Delete records older than"
+msgstr "Удалить записи старше"
+
+msgid "from table"
+msgstr "из таблицы"
+
+msgid "Deleted"
+msgstr "Удалено"
+
+msgid "Are you sure? All configuration data will be deleted."
+msgstr "Вы уверены? Все данные конфигурации будут удалены."
+
+msgid "Index"
+msgstr "Индекс"
+
+msgid "Columns"
+msgstr "Столбцы"
+
+msgid "Missing"
+msgstr "Отсутствует"
+
+msgid "Create missing indexes"
+msgstr "Создать недостающие индексы"
+
+msgid "Manual SQL (if insufficient permissions)"
+msgstr "SQL для ручного создания (если недостаточно прав)"
+
+msgid "indexes created"
+msgstr "индексов создано"
+
+msgid "All indexes already exist"
+msgstr "Все индексы уже существуют"
+
+msgid "Run cleanup now? Old records will be deleted from selected tables."
+msgstr "Запустить очистку? Старые записи будут удалены из выбранных таблиц."
+
+msgid "Cleanup completed"
+msgstr "Очистка завершена"
 
 msgid "Password Requirements"
 msgstr "Требования к паролю"
@@ -280,9 +715,6 @@ msgstr "Срок действия и блокировка"
 msgid "Password Expires After"
 msgstr "Срок действия пароля"
 
-msgid "days"
-msgstr "дн."
-
 msgid "Expiration Notification"
 msgstr "Уведомление об истечении"
 
@@ -307,140 +739,11 @@ msgstr "Проверка по словарю"
 msgid "No password policy data available."
 msgstr "Данные парольной политики отсутствуют."
 
-msgid "Fetch configs directly from C4 via the Exporter API."
-msgstr "Загрузка конфигураций напрямую из К4 через API экспортера."
+msgid "Metric"
+msgstr "Метрика"
 
-msgid "Upload JSON config file"
-msgstr "Загрузить JSON-файл конфигурации"
-
-msgid "Upload a configuration JSON file exported by c4_config_exporter."
-msgstr "Загрузите JSON-файл конфигурации, экспортированный через c4_config_exporter."
-
-msgid "Import File"
-msgstr "Импортировать файл"
-
-msgid "Import History"
-msgstr "История импортов"
-
-msgid "Date"
-msgstr "Дата"
-
-msgid "File"
-msgstr "Файл"
-
-msgid "Objects"
-msgstr "Объекты"
-
-msgid "Username"
-msgstr "Имя пользователя"
-
-msgid "Password"
-msgstr "Пароль"
-
-msgid "Sign In"
-msgstr "Войти"
-
-msgid "Invalid username or password."
-msgstr "Неверное имя пользователя или пароль."
-
-msgid "Logout"
-msgstr "Выход"
-
-msgid "Counter"
-msgstr "Счетчик"
-
-msgid "Counter interval"
-msgstr "Интервал счетчика"
-
-msgid "5 minutes"
-msgstr "5 минут"
-
-msgid "1 hour"
-msgstr "1 час"
-
-msgid "1 day"
-msgstr "1 день"
-
-msgid "1 week"
-msgstr "1 неделя"
-
-msgid "Refresh"
-msgstr "Обновить"
-
-msgid "Auto-update"
-msgstr "Автообновление"
-
-msgid "every 1 min"
-msgstr "каждую 1 мин"
-
-msgid "every 5 min"
-msgstr "каждые 5 мин"
-
-msgid "Network Objects"
-msgstr "Сетевые объекты"
-
-msgid "Source"
-msgstr "Источник"
-
-msgid "Type"
-msgstr "Тип"
-
-msgid "Description"
-msgstr "Описание"
-
-msgid "Maintenance"
-msgstr "Обслуживание"
-
-msgid "Clear dashboard database"
-msgstr "Очистить базу данных панели"
-
-msgid "Delete all imported configuration data. User accounts and Django settings will not be affected."
-msgstr "Удалить все импортированные данные конфигурации. Учетные записи пользователей и настройки Django затронуты не будут."
-
-msgid "Are you sure? All configuration data will be deleted."
-msgstr "Вы уверены? Все данные конфигурации будут удалены."
-
-msgid "Clear database"
-msgstr "Очистить базу данных"
-
-msgid "Dashboard Database statistics"
-msgstr "Статистика базы данных панели"
-
-msgid "Show _MENU_ entries"
-msgstr "Показать _MENU_ записей"
-
-msgid "Showing _START_ to _END_ of _TOTAL_ entries"
-msgstr "Записи с _START_ по _END_ из _TOTAL_"
-
-msgid "No entries"
-msgstr "Нет записей"
-
-msgid "filtered from _MAX_ total"
-msgstr "отфильтровано из _MAX_"
-
-msgid "No matching records found"
-msgstr "Совпадений не найдено"
-
-msgid "No data available"
-msgstr "Нет данных"
-
-msgid "Previous"
-msgstr "Назад"
-
-msgid "Next"
-msgstr "Вперед"
-
-msgid "Protocol"
-msgstr "Протокол"
-
-msgid "Port"
-msgstr "Порт"
-
-msgid "Group"
-msgstr "Группа"
-
-msgid "Service Objects"
-msgstr "Объекты сервисов"
+msgid "Default"
+msgstr "По умолчанию"
 
 msgid "Destination Port"
 msgstr "Порт назначения"
@@ -448,317 +751,41 @@ msgstr "Порт назначения"
 msgid "Source Port"
 msgstr "Порт источника"
 
-msgid "Logs"
-msgstr "Журналы"
+msgid "Network Services"
+msgstr "Сетевые сервисы"
 
-msgid "Log type"
-msgstr "Тип журнала"
+msgid "VPN Configuration"
+msgstr "Конфигурация VPN"
 
-msgid "System Log"
-msgstr "Системный журнал"
+msgid "Session Breakup"
+msgstr "Разрыв сессий"
 
-msgid "Management Log"
-msgstr "Журнал управления"
+msgid "No"
+msgstr "Нет"
 
-msgid "IDS / Firewall Log"
-msgstr "Журнал IDS / МЭ"
+msgid "Log Tunnel Status"
+msgstr "Логирование статуса туннеля"
 
-msgid "Interval"
-msgstr "Интервал"
+msgid "Dynamic Records Lifetime"
+msgstr "Время жизни динамических записей"
 
-msgid "Limit"
-msgstr "Лимит"
+msgid "No VPN configuration found."
+msgstr "Конфигурация VPN не найдена."
 
-msgid "Timestamp"
-msgstr "Время"
+#~ msgid "Network"
+#~ msgstr "Сеть"
 
-msgid "Severity"
-msgstr "Критичность"
+#~ msgid "Active policy rules"
+#~ msgstr "Активные правила политики"
 
-msgid "Hostname"
-msgstr "Узел"
+#~ msgid "Last Import"
+#~ msgstr "Последний импорт"
 
-msgid "Message"
-msgstr "Сообщение"
+#~ msgid "Src Inv."
+#~ msgstr "Инв. ист."
 
-msgid "Category"
-msgstr "Категория"
+#~ msgid "Dst Inv."
+#~ msgstr "Инв. назн."
 
-msgid "Event"
-msgstr "Событие"
-
-msgid "Source IP"
-msgstr "IP источника"
-
-msgid "Dest IP"
-msgstr "IP назначения"
-
-msgid "Signature"
-msgstr "Сигнатура"
-
-msgid "Rule"
-msgstr "Правило"
-
-msgid "records"
-msgstr "записей"
-
-msgid "CUS Log Database"
-msgstr "БД логов ЦУС"
-
-msgid "Connected"
-msgstr "Подключено"
-
-msgid "Not configured"
-msgstr "Не настроено"
-
-msgid "Connection to external CUS database with logs (ids_log, log, management_log)."
-msgstr "Подключение к внешней БД ЦУС с журналами (ids_log, log, management_log)."
-
-msgid "Host"
-msgstr "Хост"
-
-msgid "Database"
-msgstr "База данных"
-
-msgid "User"
-msgstr "Пользователь"
-
-msgid "Test connection"
-msgstr "Проверить подключение"
-
-msgid "CUS log database is not connected."
-msgstr "БД логов ЦУС не подключена."
-
-msgid "Counter is unavailable."
-msgstr "Счетчик недоступен."
-
-msgid "Logs are unavailable."
-msgstr "Журналы недоступны."
-
-msgid "Configure connection"
-msgstr "Настроить подключение"
-
-msgid "Save"
-msgstr "Сохранить"
-
-msgid "CUS Log Database info"
-msgstr "Информация о БД логов ЦУС"
-
-msgid "Table"
-msgstr "Таблица"
-
-msgid "Records"
-msgstr "Записи"
-
-msgid "Cleanup"
-msgstr "Очистка"
-
-msgid "older than"
-msgstr "старше"
-
-msgid "Delete"
-msgstr "Удалить"
-
-msgid "Delete records older than"
-msgstr "Удалить записи старше"
-
-msgid "from table"
-msgstr "из таблицы"
-
-msgid "Deleted"
-msgstr "Удалено"
-
-msgid "Loading..."
-msgstr "Загрузка..."
-
-msgid "Show"
-msgstr "Показать"
-
-msgid "entries"
-msgstr "записей"
-
-msgid "Connecting to C4 Exporter API..."
-msgstr "Подключение к API экспортера К4..."
-
-msgid "Fetching configurations from Continent 4..."
-msgstr "Загрузка конфигураций из Континент 4..."
-
-msgid "Importing data to database..."
-msgstr "Импорт данных в базу данных..."
-
-msgid "Completed"
-msgstr "Завершено"
-
-msgid "Sync completed successfully"
-msgstr "Синхронизация завершена успешно"
-
-msgid "Reading file..."
-msgstr "Чтение файла..."
-
-msgid "Uploading..."
-msgstr "Загрузка..."
-
-msgid "Import completed successfully"
-msgstr "Импорт завершен успешно"
-
-msgid "Import failed"
-msgstr "Ошибка импорта"
-
-msgid "Connection failed"
-msgstr "Ошибка подключения"
-
-msgid "Confirmation"
-msgstr "Подтверждение"
-
-msgid "Cancel"
-msgstr "Отмена"
-
-msgid "Confirm"
-msgstr "Подтвердить"
-
-msgid "Configuration"
-msgstr "Конфигурация"
-
-msgid "Export configs from Continent 4"
-msgstr "Экспорт конфигураций из Континент 4"
-
-msgid "Download all gateway configurations as tar.gz archive."
-msgstr "Скачать конфигурации всех шлюзов в архиве tar.gz."
-
-msgid "Export configs"
-msgstr "Экспорт конфигураций"
-
-msgid "Packing archive..."
-msgstr "Упаковка архива..."
-
-msgid "Export completed successfully"
-msgstr "Экспорт завершен успешно"
-
-msgid "Export failed"
-msgstr "Ошибка экспорта"
-
-msgid "Application"
-msgstr "Приложение"
-
-msgid "Applications"
-msgstr "Приложения"
-
-msgid "Install on"
-msgstr "Установить на"
-
-msgid "Everywhere"
-msgstr "Везде"
-
-msgid "CUS Log Auto-Cleanup"
-msgstr "Автоочистка логов ЦУС"
-
-msgid "Delete old records from CUS log tables in batches without locking. Runs VACUUM ANALYZE after cleanup."
-msgstr "Удаление старых записей из таблиц логов ЦУС батчами без блокировки. После очистки выполняется VACUUM ANALYZE."
-
-msgid "Retention"
-msgstr "Хранение"
-
-msgid "Batch size"
-msgstr "Размер батча"
-
-msgid "Tables"
-msgstr "Таблицы"
-
-msgid "Run now"
-msgstr "Запустить"
-
-msgid "Last run"
-msgstr "Последний запуск"
-
-msgid "Run cleanup now? Old records will be deleted from selected tables."
-msgstr "Запустить очистку? Старые записи будут удалены из выбранных таблиц."
-
-msgid "Cleanup completed"
-msgstr "Очистка завершена"
-
-msgid "Enable auto-cleanup"
-msgstr "Включить автоочистку"
-
-msgid "starting"
-msgstr "запуск"
-
-msgid "minutes"
-msgstr "минут"
-
-msgid "hours"
-msgstr "часов"
-
-msgid "hour"
-msgstr "час"
-
-msgid "CUS Log Database Indexes"
-msgstr "Индексы БД логов ЦУС"
-
-msgid "Index"
-msgstr "Индекс"
-
-msgid "Columns"
-msgstr "Столбцы"
-
-msgid "Missing"
-msgstr "Отсутствует"
-
-msgid "Create missing indexes"
-msgstr "Создать недостающие индексы"
-
-msgid "Manual SQL (if insufficient permissions)"
-msgstr "SQL для ручного создания (если недостаточно прав)"
-
-msgid "indexes created"
-msgstr "индексов создано"
-
-msgid "Gateways"
-msgstr "Шлюзы"
-
-msgid "Security nodes"
-msgstr "Узлы безопасности"
-
-msgid "Hosts and subnets"
-msgstr "Хосты и подсети"
-
-msgid "Protocols and ports"
-msgstr "Протоколы и порты"
-
-msgid "L7 applications"
-msgstr "Приложения L7"
-
-msgid "Object Groups"
-msgstr "Группы объектов"
-
-msgid "Groups"
-msgstr "Группы"
-
-msgid "Admin accounts"
-msgstr "Учетные записи"
-
-msgid "Domains"
-msgstr "Домены"
-
-msgid "Recent imports"
-msgstr "Последние импорты"
-
-msgid "Platform"
-msgstr "Платформа"
-
-msgid "All indexes already exist"
-msgstr "Все индексы уже существуют"
-
-msgid "Universal JSON"
-msgstr "Универсальный JSON"
-
-msgid "rules + objects"
-msgstr "правила + объекты"
-
-msgid "Raw JSON"
-msgstr "Исходный JSON"
-
-msgid "full config"
-msgstr "полная конфигурация"
-
-msgid "Format"
-msgstr "Формат"
+#~ msgid "Priority"
+#~ msgstr "Приоритет"
