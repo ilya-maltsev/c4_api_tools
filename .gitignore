@@ -12,7 +12,6 @@ build/
 staticfiles/
 
 examples/*
-dev_env/
 example_screens/*
 demo/c4-images.tar.gz
 c4_config_transfer/
