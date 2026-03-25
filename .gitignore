@@ -13,11 +13,6 @@ staticfiles/
 
 examples/*
 dev_env/
-c4_dashboard/config/__pycache__/settings.cpython-310.pyc
-c4_dashboard/dashboard/__pycache__/views.cpython-310.pyc
-c4_dashboard/dashboard/__pycache__/urls.cpython-310.pyc
-c4_dashboard/dashboard/__pycache__/urls.cpython-310.pyc
-c4_dashboard/dashboard/__pycache__/views.cpython-310.pyc
 example_screens/*
 demo/c4-images.tar.gz
 c4_config_transfer/

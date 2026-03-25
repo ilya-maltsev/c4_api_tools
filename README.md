@@ -36,9 +36,7 @@
 |---|---|
 | [c4_dashboard](c4_dashboard/) | Веб-панель конфигурации (Django + c4_lib) |
 | [c4_lib-2.0](c4_lib-2.0/) | Библиотека для работы с API Континент 4 (ГОСТ TLS) |
-| [c4_config_exporter](c4_config_exporter/) | CLI + FastAPI для экспорта нативных конфигураций из К4 |
-| [c4_config_transfer](c4_config_transfer/) | CLI для экспорта, конвертации в универсальный JSON и импорта конфигураций между К4 |
-| [c4_backup_tool](c4_backup_tool/) | Инструмент резервного копирования |
+| [dev_env](dev_env/) | Docker Compose для dev-окружения (сборка из исходников, live-reload) |
 | [demo](demo/) | Docker Compose для демо-окружения (предсобранные образы) |
 
 ## Архитектура
