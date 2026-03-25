@@ -8,13 +8,13 @@
     <h3 style="margin-bottom:12px">{% trans "Export configs from Continent 4" %}</h3>
     <p style="margin-bottom:16px;color:var(--fi-text-muted);font-size:13px">{% trans "Download all gateway configurations as tar.gz archive." %}</p>
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <button type="button" id="export-btn" class="btn btn-primary">{% trans "Export configs" %}</button>
         <label class="toolbar-label">{% trans "Format" %}:</label>
         <select id="export-format" class="toolbar-select" style="padding:4px 8px;border:1px solid var(--fi-border);border-radius:3px;font-size:13px">
             <option value="universal">{% trans "Universal JSON" %} ({% trans "rules + objects" %})</option>
             <option value="raw">{% trans "Raw JSON" %} ({% trans "full config" %})</option>
         </select>
     </div>
-    <button type="button" id="export-btn" class="btn btn-primary">{% trans "Export configs" %}</button>
     <div id="export-progress" style="display:none;margin-top:12px">
         <div style="margin-bottom:6px">
             <span id="export-step" style="font-size:13px;color:var(--fi-text)"></span>

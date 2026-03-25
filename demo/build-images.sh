@@ -24,13 +24,13 @@ build_images() {
     echo ""
     echo "=== Building c4-nginx-gost ==="
     docker build -t c4-nginx-gost:latest \
-        -f "${REPO_ROOT}/dev_env/dev-nginx-gost/Dockerfile" \
-        "${REPO_ROOT}/dev_env/dev-nginx-gost/"
+        -f "${REPO_ROOT}/dev_env/nginx/Dockerfile" \
+        "${REPO_ROOT}/dev_env/nginx/"
 
     echo ""
     echo "=== Building c4-dashboard ==="
     docker build -t c4-dashboard:latest \
-        -f "${REPO_ROOT}/dev_env/dev-c4-dashboard/Dockerfile" \
+        -f "${REPO_ROOT}/dev_env/dashboard/Dockerfile" \
         "${REPO_ROOT}/"
 
     echo ""

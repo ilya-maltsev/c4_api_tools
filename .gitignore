@@ -20,3 +20,6 @@ c4_dashboard/dashboard/__pycache__/urls.cpython-310.pyc
 c4_dashboard/dashboard/__pycache__/views.cpython-310.pyc
 example_screens/*
 demo/c4-images.tar.gz
+c4_config_transfer/
+c4_backup_tool/
+c4_config_exporter/

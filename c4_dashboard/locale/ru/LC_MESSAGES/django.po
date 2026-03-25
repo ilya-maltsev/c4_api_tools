@@ -393,7 +393,6 @@ msgstr "каждую 1 мин"
 msgid "every 5 min"
 msgstr "каждые 5 мин"
 
-#, fuzzy
 msgid "Export Policies"
 msgstr "Экспорт политик"
 

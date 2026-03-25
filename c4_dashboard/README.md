@@ -75,18 +75,18 @@ c4_dashboard/
 
 ## Предварительные требования
 
-Все сервисы запускаются в Docker-контейнерах. Необходимо:
+Все сервисы запускаются в Docker-контейнерах через единый `docker-compose.yml`:
 
-- Docker с плагином Compose
-- Запущенный контейнер PostgreSQL (`dev_env/dev-postgresql`)
-- Запущенный контейнер nginx с ГОСТ (`dev_env/dev-nginx-gost`)
-- Запущенный контейнер c4_config_exporter API (`dev_env/dev-c4-config-exporter`)
+```bash
+cd dev_env
+docker compose up -d --build
+```
 
 Подробная инструкция по развертыванию — в [README.md](../README.md) корневого каталога.
 
 ## Переменные окружения
 
-### Панель управления (`dev-c4-dashboard`)
+### Панель управления (`c4-dashboard`)
 
 | Переменная | По умолчанию | Описание |
 |---|---|---|
@@ -110,18 +110,6 @@ c4_dashboard/
 | `DJANGO_ALLOWED_HOSTS` | `*` | Разрешенные хосты |
 | `CSRF_TRUSTED_ORIGINS` | `https://127.0.0.1:8443,...` | Доверенные источники для CSRF |
 
-### API экспортера (`dev-c4-config-exporter`)
-
-| Переменная | По умолчанию | Описание |
-|---|---|---|
-| `C4_HOST` | `192.168.122.200` | IP-адрес сервера Континент 4 |
-| `C4_PORT` | `444` | Порт сервера Континент 4 |
-| `C4_USER` | `admin` | Имя пользователя К4 |
-| `C4_PASSWORD` | - | Пароль К4 |
-| `C4_CLIENT_CERT` | `/etc/c4-certs/exporter.crt` | Клиентский сертификат для mTLS |
-| `C4_CLIENT_KEY` | `/etc/c4-certs/exporter.key` | Закрытый ключ клиента |
-| `C4_CA_CERT` | `/etc/c4-certs/ca.crt` | CA-сертификат |
-| `C4_API_PORT` | `8001` | Порт FastAPI-сервиса |
 
 ## API-эндпоинты
 
