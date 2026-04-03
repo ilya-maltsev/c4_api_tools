@@ -1,0 +1,10 @@
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends libmagic1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY . /opt/mcp-server-motherduck
+RUN pip install --no-cache-dir /opt/mcp-server-motherduck
+
+EXPOSE 8080
+CMD ["mcp-server-motherduck", "--transport", "http", "--port", "8080", "--host", "0.0.0.0", "--db-path", "/data/test.duckdb", "--read-write", "--data-dir", "/data"]

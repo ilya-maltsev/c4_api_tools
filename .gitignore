@@ -181,3 +181,5 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+mcp-duckdb-images.tar.gz
+.gitignore

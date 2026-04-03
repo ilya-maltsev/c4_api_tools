@@ -82,13 +82,31 @@ def describe_data(
 
             columns.append(col_info)
 
-        return {
+        # Get sample rows so LLM sees actual data shape
+        sample_rows = []
+        try:
+            sample_result = db_client.query(f"SELECT * FROM {quoted} LIMIT 2")
+            if sample_result.get("success") and sample_result.get("rows"):
+                col_names = sample_result.get("columns", [])
+                for row in sample_result["rows"]:
+                    sample_rows.append(dict(zip(col_names, row)))
+        except Exception:
+            pass
+
+        result = {
             "success": True,
             "table": table,
             "rowCount": row_count,
             "columnCount": len(columns),
             "columns": columns,
         }
+        if sample_rows:
+            result["sampleRows"] = sample_rows
+            result["note"] = (
+                "IMPORTANT: Query only the columns shown above. "
+                "For JSON columns, use entity_value->>'field' to extract fields."
+            )
+        return result
 
     except Exception as e:
         return {

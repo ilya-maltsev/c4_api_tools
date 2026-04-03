@@ -202,11 +202,17 @@ def _import_json(
         if result.get("success", True):
             import_result = _get_import_result(quoted_table, table_name, escaped_path, db_client)
             if import_result.get("rowCount", 0) > 0:
+                t = table_name
                 import_result["note"] = (
-                    "JSON key-value object imported as rows (entity_key, entity_value). "
-                    "Use json_extract on entity_value to access nested fields. "
-                    f"Example: SELECT entity_key, entity_value->>'type' FROM {table_name}"
+                    "JSON key-value object imported as rows with columns: "
+                    "entity_key (VARCHAR) and entity_value (JSON). "
+                    "IMPORTANT: There are NO other columns. All data is inside entity_value as JSON. "
+                    "Use json_extract or ->> operator to access nested fields."
                 )
+                import_result["sql_examples"] = [
+                    f"SELECT entity_key, json_keys(entity_value) as fields FROM {t} LIMIT 5",
+                    f"SELECT entity_key, entity_value->>'field_name' as value FROM {t}",
+                ]
                 return import_result
     except Exception as e:
         return {
