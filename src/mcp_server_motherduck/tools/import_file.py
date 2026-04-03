@@ -8,12 +8,40 @@ Handles Open WebUI upload filenames: <uuid>_<original_name>
 Accepts: UUID, original filename, UUID_filename, or full path.
 """
 
+import json
 import os
 import re
 from typing import Any
 
 from ..database import DatabaseClient, quote_sql_identifier
 from .list_files import detect_format, strip_uuid_prefix
+
+
+CONFIG_PATH = os.environ.get(
+    "MCP_SQL_EXAMPLES", "/config/sql_examples.json"
+)
+_DEFAULTS = {
+    "base_table": [
+        "SELECT entity_key, entity_value->>'field' FROM {table}"
+    ],
+    "detail_table": [
+        "SELECT DISTINCT field_name FROM {detail_table} ORDER BY field_name",
+        "SELECT entity_key, field_value FROM {detail_table} WHERE field_name = 'some_field'",
+        "SELECT field_value, count(*) as cnt FROM {detail_table} GROUP BY field_value ORDER BY cnt DESC",
+        "SELECT entity_key, count(*) as field_count FROM {detail_table} GROUP BY entity_key ORDER BY field_count DESC",
+    ],
+}
+
+
+def _load_sql_examples() -> dict:
+    """Load SQL example templates. Mounted config overrides defaults."""
+    if os.path.isfile(CONFIG_PATH):
+        try:
+            with open(CONFIG_PATH) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return _DEFAULTS
 
 # Matches a bare UUID (no extension, no underscore suffix)
 _UUID_RE = re.compile(
@@ -188,8 +216,9 @@ def _import_json(
         pass
 
     # Second try: key-value JSON objects (like ACL files)
-    # Read as raw text, use json_each to flatten keys into rows
+    # Import as entity_key + entity_value, then also create a flattened table
     try:
+        # Base table: one row per top-level key
         sql = f"""
             CREATE OR REPLACE TABLE {quoted_table} AS
             SELECT
@@ -199,21 +228,62 @@ def _import_json(
             LATERAL json_each(t.content::JSON) j
         """
         result = db_client.query(sql)
-        if result.get("success", True):
-            import_result = _get_import_result(quoted_table, table_name, escaped_path, db_client)
-            if import_result.get("rowCount", 0) > 0:
-                t = table_name
-                import_result["note"] = (
-                    "JSON key-value object imported as rows with columns: "
-                    "entity_key (VARCHAR) and entity_value (JSON). "
-                    "IMPORTANT: There are NO other columns. All data is inside entity_value as JSON. "
-                    "Use json_extract or ->> operator to access nested fields."
-                )
-                import_result["sql_examples"] = [
-                    f"SELECT entity_key, json_keys(entity_value) as fields FROM {t} LIMIT 5",
-                    f"SELECT entity_key, entity_value->>'field_name' as value FROM {t}",
-                ]
-                return import_result
+        if not result.get("success", True):
+            raise Exception(result.get("error", "unknown"))
+
+        import_result = _get_import_result(quoted_table, table_name, escaped_path, db_client)
+        if import_result.get("rowCount", 0) == 0:
+            raise Exception("No rows imported")
+
+        # Try to create a flattened detail table:
+        # entity_key + each nested key-value pair as separate rows
+        detail_table = f"{table_name}_detail"
+        detail_quoted = quote_sql_identifier(detail_table)
+        try:
+            detail_sql = f"""
+                CREATE OR REPLACE TABLE {detail_quoted} AS
+                SELECT
+                    entity_key,
+                    d.key as field_name,
+                    d.value::VARCHAR as field_value
+                FROM {quoted_table},
+                LATERAL json_each(entity_value) d
+            """
+            db_client.query(detail_sql)
+
+            detail_count = db_client.query(f"SELECT count(*) FROM {detail_quoted}")
+            detail_rows = 0
+            if detail_count.get("success") and detail_count.get("rows"):
+                detail_rows = detail_count["rows"][0][0]
+        except Exception:
+            detail_table = None
+            detail_rows = 0
+
+        examples_cfg = _load_sql_examples()
+
+        import_result["note"] = (
+            f"JSON key-value object imported into table '{table_name}' "
+            f"(entity_key, entity_value as JSON)."
+        )
+        import_result["sql_examples"] = [
+            e.format(table=table_name) for e in examples_cfg.get("base_table", [])
+        ]
+
+        if detail_table and detail_rows > 0:
+            import_result["note"] += (
+                f" Also created '{detail_table}' — flattened: one row per field "
+                f"(entity_key, field_name, field_value). {detail_rows} rows. "
+                f"USE THIS TABLE for analysis — it is easier to query."
+            )
+            import_result["detail_table"] = detail_table
+            import_result["detail_rows"] = detail_rows
+            import_result["sql_examples"] = [
+                e.format(table=table_name, detail_table=detail_table)
+                for e in examples_cfg.get("detail_table", [])
+            ]
+
+        return import_result
+
     except Exception as e:
         return {
             "success": False,
