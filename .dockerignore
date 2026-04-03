@@ -1,8 +1,9 @@
 .git
 .github
 tests
-*.tar.gz
+docker
 __pycache__
 *.pyc
+*.tar.gz
 .ruff_cache
 uv.lock

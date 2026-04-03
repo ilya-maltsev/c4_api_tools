@@ -1,0 +1,18 @@
+{
+  "sql_examples": {
+    "base_table": [
+      "SELECT entity_key, entity_value->>'field' FROM {table}"
+    ],
+    "detail_table": [
+      "SELECT DISTINCT field_name FROM {detail_table} ORDER BY field_name",
+      "SELECT entity_key, field_value FROM {detail_table} WHERE field_name = 'some_field'",
+      "SELECT field_value, count(*) as cnt FROM {detail_table} GROUP BY field_value ORDER BY cnt DESC",
+      "SELECT entity_key, count(*) as field_count FROM {detail_table} GROUP BY entity_key ORDER BY field_count DESC"
+    ]
+  },
+  "queries": {
+    "json_flatten": "SELECT j.key as entity_key, j.value as entity_value FROM read_text('{path}') t, LATERAL json_each(t.content::JSON) j",
+    "detail_flatten": "SELECT entity_key, d.key as field_name, d.value::VARCHAR as field_value FROM {table}, LATERAL json_each(entity_value) d",
+    "field_summary": "SELECT field_name, count(*) as total_rows, count(DISTINCT entity_key) as entity_count, count(DISTINCT field_value) as distinct_values, min(field_value) as sample_value FROM {detail_table} GROUP BY field_name ORDER BY field_name"
+  }
+}

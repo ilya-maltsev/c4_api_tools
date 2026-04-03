@@ -3,16 +3,17 @@
 # Build, export and import Docker images for the DuckDB MCP server.
 #
 # Usage:
-#   cd mcp-server-motherduck && bash build-images.sh           # build (default)
-#   cd mcp-server-motherduck && bash build-images.sh build     # same as above
-#   cd mcp-server-motherduck && bash build-images.sh export    # export to mcp-duckdb-images.tar.gz
-#   cd mcp-server-motherduck && bash build-images.sh import    # import from mcp-duckdb-images.tar.gz
-#   cd mcp-server-motherduck && bash build-images.sh all       # build + export
+#   cd mcp-server-motherduck/docker && bash build-images.sh           # build (default)
+#   cd mcp-server-motherduck/docker && bash build-images.sh build     # same
+#   cd mcp-server-motherduck/docker && bash build-images.sh export    # export to mcp-duckdb-images.tar.gz
+#   cd mcp-server-motherduck/docker && bash build-images.sh import    # import from mcp-duckdb-images.tar.gz
+#   cd mcp-server-motherduck/docker && bash build-images.sh all       # build + export
 #
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ARCHIVE="${SCRIPT_DIR}/mcp-duckdb-images.tar.gz"
 IMAGE="mcp-server-motherduck:latest"
 
@@ -21,7 +22,7 @@ build_images() {
     docker build \
         -f "${SCRIPT_DIR}/Dockerfile" \
         -t "${IMAGE}" \
-        "${SCRIPT_DIR}/"
+        "${REPO_ROOT}/"
 
     echo ""
     echo "=== Images built ==="
@@ -47,7 +48,7 @@ import_images() {
     echo "=== Images loaded ==="
     docker images --format "  {{.Repository}}:{{.Tag}}  {{.Size}}" | grep -E "^  mcp-server-motherduck"
     echo ""
-    echo "Now run:  docker compose up -d"
+    echo "Now run:  cd docker && docker compose up -d"
 }
 
 CMD="${1:-build}"

@@ -18,30 +18,44 @@ from .list_files import detect_format, strip_uuid_prefix
 
 
 CONFIG_PATH = os.environ.get(
-    "MCP_SQL_EXAMPLES", "/config/sql_examples.json"
+    "MCP_IMPORT_CONFIG", "/config/import_config.json"
 )
 _DEFAULTS = {
-    "base_table": [
-        "SELECT entity_key, entity_value->>'field' FROM {table}"
-    ],
-    "detail_table": [
-        "SELECT DISTINCT field_name FROM {detail_table} ORDER BY field_name",
-        "SELECT entity_key, field_value FROM {detail_table} WHERE field_name = 'some_field'",
-        "SELECT field_value, count(*) as cnt FROM {detail_table} GROUP BY field_value ORDER BY cnt DESC",
-        "SELECT entity_key, count(*) as field_count FROM {detail_table} GROUP BY entity_key ORDER BY field_count DESC",
-    ],
+    "sql_examples": {
+        "base_table": [
+            "SELECT entity_key, entity_value->>'field' FROM {table}"
+        ],
+        "detail_table": [
+            "SELECT DISTINCT field_name FROM {detail_table} ORDER BY field_name",
+            "SELECT entity_key, field_value FROM {detail_table} WHERE field_name = 'some_field'",
+            "SELECT field_value, count(*) as cnt FROM {detail_table} GROUP BY field_value ORDER BY cnt DESC",
+            "SELECT entity_key, count(*) as field_count FROM {detail_table} GROUP BY entity_key ORDER BY field_count DESC",
+        ],
+    },
+    "queries": {
+        "json_flatten": "SELECT j.key as entity_key, j.value as entity_value FROM read_text('{path}') t, LATERAL json_each(t.content::JSON) j",
+        "detail_flatten": "SELECT entity_key, d.key as field_name, d.value::VARCHAR as field_value FROM {table}, LATERAL json_each(entity_value) d",
+        "field_summary": "SELECT field_name, count(*) as total_rows, count(DISTINCT entity_key) as entity_count, count(DISTINCT field_value) as distinct_values, min(field_value) as sample_value FROM {detail_table} GROUP BY field_name ORDER BY field_name",
+    },
 }
 
 
-def _load_sql_examples() -> dict:
-    """Load SQL example templates. Mounted config overrides defaults."""
+def _load_config() -> dict:
+    """Load import config. Mounted file overrides defaults."""
+    cfg = dict(_DEFAULTS)
     if os.path.isfile(CONFIG_PATH):
         try:
             with open(CONFIG_PATH) as f:
-                return json.load(f)
+                custom = json.load(f)
+            # Merge: custom keys override defaults
+            for key in custom:
+                if isinstance(custom[key], dict) and isinstance(cfg.get(key), dict):
+                    cfg[key].update(custom[key])
+                else:
+                    cfg[key] = custom[key]
         except Exception:
             pass
-    return _DEFAULTS
+    return cfg
 
 # Matches a bare UUID (no extension, no underscore suffix)
 _UUID_RE = re.compile(
@@ -215,18 +229,15 @@ def _import_json(
     except Exception:
         pass
 
-    # Second try: key-value JSON objects (like ACL files)
+    # Second try: key-value JSON objects
     # Import as entity_key + entity_value, then also create a flattened table
     try:
+        cfg = _load_config()
+        queries = cfg["queries"]
+
         # Base table: one row per top-level key
-        sql = f"""
-            CREATE OR REPLACE TABLE {quoted_table} AS
-            SELECT
-                j.key as entity_key,
-                j.value as entity_value
-            FROM read_text('{escaped_path}') t,
-            LATERAL json_each(t.content::JSON) j
-        """
+        flatten_sql = queries["json_flatten"].format(path=escaped_path)
+        sql = f"CREATE OR REPLACE TABLE {quoted_table} AS {flatten_sql}"
         result = db_client.query(sql)
         if not result.get("success", True):
             raise Exception(result.get("error", "unknown"))
@@ -235,21 +246,12 @@ def _import_json(
         if import_result.get("rowCount", 0) == 0:
             raise Exception("No rows imported")
 
-        # Try to create a flattened detail table:
-        # entity_key + each nested key-value pair as separate rows
+        # Try to create a flattened detail table
         detail_table = f"{table_name}_detail"
         detail_quoted = quote_sql_identifier(detail_table)
         try:
-            detail_sql = f"""
-                CREATE OR REPLACE TABLE {detail_quoted} AS
-                SELECT
-                    entity_key,
-                    d.key as field_name,
-                    d.value::VARCHAR as field_value
-                FROM {quoted_table},
-                LATERAL json_each(entity_value) d
-            """
-            db_client.query(detail_sql)
+            detail_sql = queries["detail_flatten"].format(table=quoted_table)
+            db_client.query(f"CREATE OR REPLACE TABLE {detail_quoted} AS {detail_sql}")
 
             detail_count = db_client.query(f"SELECT count(*) FROM {detail_quoted}")
             detail_rows = 0
@@ -259,14 +261,14 @@ def _import_json(
             detail_table = None
             detail_rows = 0
 
-        examples_cfg = _load_sql_examples()
+        examples = cfg["sql_examples"]
 
         import_result["note"] = (
             f"JSON key-value object imported into table '{table_name}' "
             f"(entity_key, entity_value as JSON)."
         )
         import_result["sql_examples"] = [
-            e.format(table=table_name) for e in examples_cfg.get("base_table", [])
+            e.format(table=table_name) for e in examples.get("base_table", [])
         ]
 
         if detail_table and detail_rows > 0:
@@ -279,8 +281,17 @@ def _import_json(
             import_result["detail_rows"] = detail_rows
             import_result["sql_examples"] = [
                 e.format(table=table_name, detail_table=detail_table)
-                for e in examples_cfg.get("detail_table", [])
+                for e in examples.get("detail_table", [])
             ]
+
+            # Field summary using configurable query
+            field_summary = _get_field_summary(detail_quoted, db_client, queries)
+            if field_summary:
+                import_result["field_summary"] = field_summary
+                import_result["action_required"] = (
+                    "Multiple field types found. Ask the user which fields "
+                    "contain the data they want to analyze."
+                )
 
         return import_result
 
@@ -290,6 +301,68 @@ def _import_json(
             "error": f"Could not parse JSON file: {e}",
             "hint": "The JSON structure may not be supported. Try execute_query with read_json_auto() directly.",
         }
+
+
+def _get_field_summary(detail_quoted: str, db_client: DatabaseClient, queries: dict) -> dict | None:
+    """
+    Analyze field names and auto-classify into data fields vs metadata.
+
+    Heuristic: fields sharing a common prefix with numeric suffixes
+    (e.g. access_to.0, access_to.1, item_3) are repeated data fields.
+    Fields appearing once per entity with few distinct values are metadata.
+    """
+    try:
+        sql = queries["field_summary"].format(detail_table=detail_quoted)
+        result = db_client.query(sql)
+        if not result.get("success") or not result.get("rows"):
+            return None
+
+        fields = []
+        for row in result["rows"]:
+            fields.append({
+                "field_name": row[0],
+                "total_rows": row[1],
+                "entity_count": row[2],
+                "distinct_values": row[3],
+                "sample_value": str(row[4])[:100] if row[4] else None,
+            })
+
+        # Auto-classify: group by prefix (strip trailing .N or _N)
+        from collections import defaultdict
+        prefix_groups = defaultdict(list)
+        for f in fields:
+            name = f["field_name"]
+            # Strip trailing separator + digits: "access_to.0" → "access_to"
+            base = re.sub(r'[._]\d+$', '', name)
+            prefix_groups[base].append(f)
+
+        data_fields = []
+        metadata_fields = []
+        for prefix, group in prefix_groups.items():
+            if len(group) > 1:
+                # Multiple fields with same prefix = repeated data
+                data_fields.append({
+                    "prefix": prefix,
+                    "count": len(group),
+                    "total_rows": sum(f["total_rows"] for f in group),
+                    "sample_value": group[0]["sample_value"],
+                })
+            else:
+                f = group[0]
+                metadata_fields.append({
+                    "field_name": f["field_name"],
+                    "distinct_values": f["distinct_values"],
+                    "sample_value": f["sample_value"],
+                })
+
+        return {
+            "data_fields": data_fields,
+            "metadata_fields": metadata_fields,
+            "all_fields": fields,
+        }
+
+    except Exception:
+        return None
 
 
 def _get_import_result(

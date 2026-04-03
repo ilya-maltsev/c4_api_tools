@@ -1,0 +1,75 @@
+services:
+
+  # ── Open WebUI ─────────────────────────────────────────────────────
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui-data:/app/backend/data
+      - shared-uploads:/app/backend/data/uploads
+    environment:
+      # Point to your LLM backend (uncomment one):
+      # Ollama (local):
+      - OLLAMA_BASE_URL=http://ollama:11434
+      # OpenAI-compatible API:
+      # - OPENAI_API_BASE_URL=http://your-llm:8000/v1
+      # - OPENAI_API_KEY=your-key
+
+      # RAG settings (for non-MCP file uploads)
+      - CONTENT_EXTRACTION_ENGINE=default
+      - RAG_TEXT_SPLITTER=tiktoken
+      - CHUNK_SIZE=2048
+      - CHUNK_OVERLAP=0
+    depends_on:
+      - ollama
+      - duckdb-mcp
+    restart: unless-stopped
+
+  # ── Ollama (local LLM) ────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # Uncomment for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    restart: unless-stopped
+
+  # ── DuckDB MCP Server (StreamableHTTP) ─────────────────────────────
+  duckdb-mcp:
+    image: mcp-server-motherduck:latest
+    container_name: duckdb-mcp
+    ports:
+      - "8000:8000"
+    volumes:
+      - shared-uploads:/uploads:ro
+      - ./config/import_config.json:/config/import_config.json:ro
+    entrypoint:
+      - mcp-server-motherduck
+      - --transport
+      - http
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --db-path
+      - /data/analytics.duckdb
+      - --read-write
+      - --data-dir
+      - /uploads
+    restart: unless-stopped
+
+volumes:
+  open-webui-data:
+  ollama-data:
+  shared-uploads:
