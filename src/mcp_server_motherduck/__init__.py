@@ -114,6 +114,12 @@ logging.basicConfig(level=logging.INFO, format="[motherduck] %(levelname)s - %(m
     help="Enable the switch_database_connection tool to change databases at runtime. Disabled by default.",
 )
 @click.option(
+    "--data-dir",
+    default=None,
+    envvar="MCP_DATA_DIR",
+    help="Directory containing structured data files (JSON, CSV, Parquet). Enables list_files and import_file tools.",
+)
+@click.option(
     "--motherduck-connection-parameters",
     default="session_hint=mcp&dbinstance_inactivity_ttl=0s",
     envvar="MCP_MOTHERDUCK_CONNECTION_PARAMETERS",
@@ -154,6 +160,7 @@ def main(
     query_timeout: int,
     init_sql: str | None,
     allow_switch_databases: bool,
+    data_dir: str | None,
     motherduck_connection_parameters: str | None,
     # Deprecated args
     saas_mode: bool,
@@ -244,6 +251,9 @@ def main(
         logger.warning("⚠️  '--transport sse' is deprecated. Use '--transport http' instead.")
         transport = "http"
 
+    if data_dir:
+        logger.info(f"Data directory: {data_dir}")
+
     # Create the FastMCP server
     mcp = create_mcp_server(
         db_path=db_path,
@@ -258,6 +268,7 @@ def main(
         init_sql=init_sql,
         allow_switch_databases=allow_switch_databases,
         motherduck_connection_parameters=motherduck_connection_parameters,
+        data_dir=data_dir,
     )
 
     # Run the server with the appropriate transport

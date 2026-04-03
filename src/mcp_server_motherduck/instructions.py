@@ -9,10 +9,20 @@ INSTRUCTIONS_BASE = """Execute SQL queries against DuckDB and MotherDuck databas
 
 ## Available Tools
 
+- `list_files`: List structured data files (JSON, CSV, Parquet) available for import
+- `import_file`: Import a file as a table with auto-detected schema (supports JSON, JSONL, CSV, Parquet)
+- `describe_data`: Get summary statistics for a table (row count, types, samples, nulls, uniques)
 - `execute_query`: Execute SQL queries (DuckDB SQL dialect)
 - `list_databases`: List all available databases
 - `list_tables`: List tables and views in a database
 - `list_columns`: List columns of a table or view
+
+## Recommended Workflow
+
+1. Use `list_files` to see available data files
+2. Use `import_file` to load a file as a table (auto-detects format and schema)
+3. Use `describe_data` to understand the table structure and data
+4. Use `execute_query` for analysis
 
 ## DuckDB SQL Quick Reference
 

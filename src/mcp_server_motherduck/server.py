@@ -15,9 +15,13 @@ from mcp.types import Icon
 from .configs import SERVER_VERSION
 from .database import DatabaseClient
 from .instructions import get_instructions
+from .tools.describe_data import describe_data as describe_data_fn
 from .tools.execute_query import execute_query as execute_query_fn
+from .tools.import_data import import_data as import_data_fn
+from .tools.import_file import import_file as import_file_fn
 from .tools.list_columns import list_columns as list_columns_fn
 from .tools.list_databases import list_databases as list_databases_fn
+from .tools.list_files import list_files as list_files_fn
 from .tools.list_tables import list_tables as list_tables_fn
 from .tools.switch_database_connection import (
     switch_database_connection as switch_database_connection_fn,
@@ -43,6 +47,7 @@ def create_mcp_server(
     init_sql: str | None = None,
     allow_switch_databases: bool = False,
     motherduck_connection_parameters: str | None = None,
+    data_dir: str | None = None,
 ) -> FastMCP:
     """
     Create and configure the FastMCP server.
@@ -60,6 +65,7 @@ def create_mcp_server(
         init_sql: SQL file path or string to execute on startup
         allow_switch_databases: Enable the switch_database_connection tool
         motherduck_connection_parameters: Additional MotherDuck connection string parameters (e.g. "session_hint=mcp&dbinstance_inactivity_ttl=0s")
+        data_dir: Directory for structured data files (JSON, CSV, Parquet). Enables list_files and import_file tools.
 
     Returns:
         Configured FastMCP server instance
@@ -239,6 +245,98 @@ def create_mcp_server(
                 create_if_not_exists=create_if_not_exists,
             )
             return json.dumps(result, indent=2, default=str)
+
+    # Register file tools (when data_dir is configured)
+    if data_dir:
+        @mcp.tool(
+            name="list_files",
+            title="List Files",
+            description="List structured data files (JSON, JSONL, CSV, Parquet) available for import in the data directory.",
+            annotations=catalog_annotations,
+        )
+        def list_files_tool() -> str:
+            """
+            List available data files.
+
+            Returns:
+                JSON string with file list
+            """
+            result = list_files_fn(data_dir)
+            return json.dumps(result, indent=2, default=str)
+
+        @mcp.tool(
+            name="import_file",
+            title="Import File",
+            description="Import a structured data file (JSON, JSONL, CSV, Parquet) as a table. Auto-detects format and schema. For JSON key-value objects, automatically flattens into rows.",
+            annotations={
+                "readOnlyHint": False,
+                "destructiveHint": False,
+                "openWorldHint": False,
+            },
+        )
+        def import_file_tool(file_path: str, table_name: str | None = None) -> str:
+            """
+            Import a file as a DuckDB table.
+
+            Args:
+                file_path: File name or path (relative to data dir or absolute)
+                table_name: Optional custom table name (auto-generated from filename if omitted)
+
+            Returns:
+                JSON string with import results including schema
+            """
+            result = import_file_fn(file_path, db_client, table_name, data_dir)
+            return json.dumps(result, indent=2, default=str)
+
+    # Register import_data tool (receive content from chat uploads)
+    @mcp.tool(
+        name="import_data",
+        title="Import Data",
+        description="Import raw data content (JSON or CSV) directly into a DuckDB table. Use this when a user uploads or pastes a file in chat. Pass the file content as the 'content' argument.",
+        annotations={
+            "readOnlyHint": False,
+            "destructiveHint": False,
+            "openWorldHint": False,
+        },
+    )
+    def import_data_tool(
+        content: str,
+        format: str = "auto",
+        table_name: str = "uploaded_data",
+    ) -> str:
+        """
+        Import raw data content as a DuckDB table.
+
+        Args:
+            content: Raw file content (JSON string, CSV text)
+            format: Data format - "json", "csv", or "auto" (detect from content)
+            table_name: Table name to create (default: uploaded_data)
+
+        Returns:
+            JSON string with import results including schema
+        """
+        result = import_data_fn(content, db_client, format, table_name)
+        return json.dumps(result, indent=2, default=str)
+
+    # Register describe_data tool
+    @mcp.tool(
+        name="describe_data",
+        title="Describe Data",
+        description="Get summary statistics for a table: row count, column types, null counts, unique value counts, and sample values. No SQL required.",
+        annotations=catalog_annotations,
+    )
+    def describe_data_tool(table: str) -> str:
+        """
+        Get summary statistics for a table.
+
+        Args:
+            table: Table name to describe
+
+        Returns:
+            JSON string with table statistics
+        """
+        result = describe_data_fn(table, db_client)
+        return json.dumps(result, indent=2, default=str)
 
     logger.info(f"FastMCP server created with {len(mcp._tool_manager._tools)} tools")
 

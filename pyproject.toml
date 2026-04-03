@@ -8,6 +8,7 @@ dependencies = [
     "duckdb==1.5.1",
     "fastmcp>=2.14,<3",
     "click>=8.1.8",
+    "python-magic>=0.4.27",
     "pytz>=2025.2",
 ]
 
