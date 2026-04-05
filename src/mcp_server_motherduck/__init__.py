@@ -5,6 +5,7 @@ This module provides the CLI entry point for the MCP server.
 """
 
 import logging
+import os
 import warnings
 
 import click
@@ -120,6 +121,12 @@ logging.basicConfig(level=logging.INFO, format="[motherduck] %(levelname)s - %(m
     help="Directory containing structured data files (JSON, CSV, Parquet). Enables list_files and import_file tools.",
 )
 @click.option(
+    "--base-url",
+    default=None,
+    envvar="MCP_BASE_URL",
+    help="Public base URL for file downloads (e.g. http://host:9003). Auto-detected if omitted.",
+)
+@click.option(
     "--motherduck-connection-parameters",
     default="session_hint=mcp&dbinstance_inactivity_ttl=0s",
     envvar="MCP_MOTHERDUCK_CONNECTION_PARAMETERS",
@@ -161,6 +168,7 @@ def main(
     init_sql: str | None,
     allow_switch_databases: bool,
     data_dir: str | None,
+    base_url: str | None,
     motherduck_connection_parameters: str | None,
     # Deprecated args
     saas_mode: bool,
@@ -269,6 +277,7 @@ def main(
         allow_switch_databases=allow_switch_databases,
         motherduck_connection_parameters=motherduck_connection_parameters,
         data_dir=data_dir,
+        base_url=base_url or os.environ.get("MCP_BASE_URL", f"http://{host}:9003"),
     )
 
     # Run the server with the appropriate transport

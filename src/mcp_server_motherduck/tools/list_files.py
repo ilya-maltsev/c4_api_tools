@@ -84,28 +84,48 @@ def strip_uuid_prefix(filename: str) -> str:
     return _UUID_PREFIX.sub("", filename)
 
 
-def list_files(data_dir: str) -> dict[str, Any]:
+def list_files(data_dir: str, filter: str | None = None, limit: int = 50, offset: int = 0) -> dict[str, Any]:
     """
     List structured data files in the data directory.
+    When used with shared uploads, pass the file ID or name from chat context as filter.
 
     Args:
         data_dir: Base directory to scan for files
+        filter: Only show files matching this string (UUID or filename substring)
+        limit: Max files to return
+        offset: Skip first N files
 
     Returns:
         JSON-serializable dict with file list
     """
     try:
+        if not filter:
+            return {
+                "success": False,
+                "error": "Filter is required. Pass the file name or ID from the chat context.",
+            }
+
         if not os.path.isdir(data_dir):
             return {
                 "success": False,
                 "error": f"Data directory not found: {data_dir}",
             }
 
+        filter_lower = filter.lower()
+
         files = []
         for entry in sorted(os.listdir(data_dir)):
             filepath = os.path.join(data_dir, entry)
             if not os.path.isfile(filepath):
                 continue
+
+            # Apply filter — match against UUID prefix, clean name, or full disk name
+            if filter_lower:
+                entry_lower = entry.lower()
+                clean_lower = strip_uuid_prefix(entry).lower()
+                if (filter_lower not in entry_lower
+                        and filter_lower not in clean_lower):
+                    continue
 
             clean_name = strip_uuid_prefix(entry)
             fmt = detect_format(filepath)
@@ -122,12 +142,21 @@ def list_files(data_dir: str) -> dict[str, Any]:
                 "size_human": _human_size(stat.st_size),
             })
 
-        return {
+        total = len(files)
+        paginated = files[offset:offset + limit]
+
+        result = {
             "success": True,
             "directory": data_dir,
-            "files": files,
-            "fileCount": len(files),
+            "files": paginated,
+            "fileCount": len(paginated),
+            "total": total,
         }
+        if offset + limit < total:
+            result["has_more"] = True
+            result["next_offset"] = offset + limit
+
+        return result
 
     except Exception as e:
         return {

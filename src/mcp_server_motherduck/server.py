@@ -6,17 +6,20 @@ This module creates and configures the FastMCP server with all tools.
 
 import json
 import logging
+import os
 from pathlib import Path
 
-from fastmcp import FastMCP
+from fastmcp import FastMCP, Context
 from fastmcp.utilities.types import Image
 from mcp.types import Icon
 
 from .configs import SERVER_VERSION
 from .database import DatabaseClient
+from .session_db import SessionDatabaseManager
 from .instructions import get_instructions
 from .tools.describe_data import describe_data as describe_data_fn
 from .tools.execute_query import execute_query as execute_query_fn
+from .tools.export_csv import export_csv as export_csv_fn
 from .tools.import_data import import_data as import_data_fn
 from .tools.import_file import import_file as import_file_fn
 from .tools.list_columns import list_columns as list_columns_fn
@@ -48,6 +51,7 @@ def create_mcp_server(
     allow_switch_databases: bool = False,
     motherduck_connection_parameters: str | None = None,
     data_dir: str | None = None,
+    base_url: str = "http://localhost:8000",
 ) -> FastMCP:
     """
     Create and configure the FastMCP server.
@@ -85,6 +89,16 @@ def create_mcp_server(
         motherduck_connection_parameters=motherduck_connection_parameters,
     )
 
+    # Session-aware database manager for per-chat isolation
+    session_mgr = SessionDatabaseManager(max_rows=max_rows, max_chars=max_chars)
+
+    def _get_session_id(ctx: Context) -> str:
+        """Extract session ID from FastMCP context, fallback to 'default'."""
+        sid = getattr(ctx, "session_id", None)
+        if not sid:
+            sid = getattr(ctx, "request_id", None)
+        return str(sid) if sid else "default"
+
     # Get instructions with connection context
     instructions = get_instructions(
         read_only=read_only,
@@ -107,6 +121,9 @@ def create_mcp_server(
         icons=icons if icons else None,
     )
 
+    # Base URL for export download links
+    _base_url = base_url.rstrip("/")
+
     # Define query tool annotations (dynamic based on read_only flag)
     query_annotations = {
         "readOnlyHint": read_only,
@@ -118,6 +135,7 @@ def create_mcp_server(
     catalog_annotations = {
         "readOnlyHint": True,
         "destructiveHint": False,
+        "idempotentHint": True,
         "openWorldHint": False,
     }
 
@@ -135,9 +153,9 @@ def create_mcp_server(
         description="Execute a SQL query on the DuckDB or MotherDuck database. Unqualified table names resolve to current_database() and current_schema() automatically. Fully qualified names (database.schema.table) are only needed when multiple DuckDB databases are attached or when connected to MotherDuck.",
         annotations=query_annotations,
     )
-    def execute_query(sql: str) -> str:
+    def execute_query(sql: str, ctx: Context = None) -> str:
         """
-        Execute a SQL query on the DuckDB or MotherDuck database.
+        Execute a SQL query on the session's DuckDB database.
 
         Args:
             sql: SQL query to execute (DuckDB SQL dialect)
@@ -148,9 +166,10 @@ def create_mcp_server(
         Raises:
             ValueError: If the query fails
         """
-        result = execute_query_fn(sql, db_client)
+        sid = _get_session_id(ctx) if ctx else "default"
+        client = session_mgr.get_client(sid)
+        result = client.query(sql)
         if not result.get("success", True):
-            # Raise exception so FastMCP marks as isError=True
             raise ValueError(json.dumps(result, indent=2, default=str))
         return json.dumps(result, indent=2, default=str)
 
@@ -251,30 +270,36 @@ def create_mcp_server(
         @mcp.tool(
             name="list_files",
             title="List Files",
-            description="List structured data files (JSON, JSONL, CSV, Parquet) available for import in the data directory.",
+            description="List data files available for import. Use filter to find a specific file by name or ID from chat context.",
             annotations=catalog_annotations,
         )
-        def list_files_tool() -> str:
+        def list_files_tool(filter: str | None = None, limit: int = 50, offset: int = 0) -> str:
             """
             List available data files.
+
+            Args:
+                filter: Only show files matching this string (file ID or name from chat)
+                limit: Max files to return (default 50)
+                offset: Skip first N files (default 0)
 
             Returns:
                 JSON string with file list
             """
-            result = list_files_fn(data_dir)
+            result = list_files_fn(data_dir, filter, limit, offset)
             return json.dumps(result, indent=2, default=str)
 
         @mcp.tool(
             name="import_file",
             title="Import File",
-            description="Import a structured data file (JSON, JSONL, CSV, Parquet) as a table. Auto-detects format and schema. For JSON key-value objects, automatically flattens into rows.",
+            description="Import a data file as a DuckDB table. Auto-detects format (JSON, CSV, Parquet) from content. Creates a flattened detail table for JSON key-value objects.",
             annotations={
                 "readOnlyHint": False,
                 "destructiveHint": False,
+                "idempotentHint": True,
                 "openWorldHint": False,
             },
         )
-        def import_file_tool(file_path: str, table_name: str | None = None) -> str:
+        def import_file_tool(file_path: str, table_name: str | None = None, ctx: Context = None) -> str:
             """
             Import a file as a DuckDB table.
 
@@ -285,17 +310,20 @@ def create_mcp_server(
             Returns:
                 JSON string with import results including schema
             """
-            result = import_file_fn(file_path, db_client, table_name, data_dir)
+            sid = _get_session_id(ctx) if ctx else "default"
+            client = session_mgr.get_client(sid)
+            result = import_file_fn(file_path, client, table_name, data_dir)
             return json.dumps(result, indent=2, default=str)
 
     # Register import_data tool (receive content from chat uploads)
     @mcp.tool(
         name="import_data",
         title="Import Data",
-        description="Import raw data content (JSON or CSV) directly into a DuckDB table. Use this when a user uploads or pastes a file in chat. Pass the file content as the 'content' argument.",
+        description="Import raw data content (JSON or CSV) into a DuckDB table. Pass file content as a string.",
         annotations={
             "readOnlyHint": False,
             "destructiveHint": False,
+            "idempotentHint": True,
             "openWorldHint": False,
         },
     )
@@ -303,6 +331,7 @@ def create_mcp_server(
         content: str,
         format: str = "auto",
         table_name: str = "uploaded_data",
+        ctx: Context = None,
     ) -> str:
         """
         Import raw data content as a DuckDB table.
@@ -315,7 +344,36 @@ def create_mcp_server(
         Returns:
             JSON string with import results including schema
         """
-        result = import_data_fn(content, db_client, format, table_name)
+        sid = _get_session_id(ctx) if ctx else "default"
+        client = session_mgr.get_client(sid)
+        result = import_data_fn(content, client, format, table_name)
+        return json.dumps(result, indent=2, default=str)
+
+    # Register export_csv tool
+    @mcp.tool(
+        name="export_csv",
+        title="Export CSV",
+        description="Execute a SQL query and save results as a downloadable CSV file. Returns a download URL. Use when the user wants to download or save query results.",
+        annotations={
+            "readOnlyHint": False,
+            "destructiveHint": False,
+            "openWorldHint": False,
+        },
+    )
+    def export_csv_tool(sql: str, filename: str | None = None, ctx: Context = None) -> str:
+        """
+        Execute a query and export results as CSV.
+
+        Args:
+            sql: SQL query to execute
+            filename: Optional output filename (auto-generated if omitted)
+
+        Returns:
+            JSON string with download URL and row count
+        """
+        sid = _get_session_id(ctx) if ctx else "default"
+        client = session_mgr.get_client(sid)
+        result = export_csv_fn(sql, client, _base_url, filename)
         return json.dumps(result, indent=2, default=str)
 
     # Register describe_data tool
@@ -325,7 +383,7 @@ def create_mcp_server(
         description="Get summary statistics for a table: row count, column types, null counts, unique value counts, and sample values. No SQL required.",
         annotations=catalog_annotations,
     )
-    def describe_data_tool(table: str) -> str:
+    def describe_data_tool(table: str, ctx: Context = None) -> str:
         """
         Get summary statistics for a table.
 
@@ -335,7 +393,9 @@ def create_mcp_server(
         Returns:
             JSON string with table statistics
         """
-        result = describe_data_fn(table, db_client)
+        sid = _get_session_id(ctx) if ctx else "default"
+        client = session_mgr.get_client(sid)
+        result = describe_data_fn(table, client)
         return json.dumps(result, indent=2, default=str)
 
     logger.info(f"FastMCP server created with {len(mcp._tool_manager._tools)} tools")

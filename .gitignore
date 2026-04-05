@@ -183,3 +183,5 @@ cython_debug/
 .pypirc
 mcp-duckdb-images.tar.gz
 .gitignore
+notes.md
+task_plan.md

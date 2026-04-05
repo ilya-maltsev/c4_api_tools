@@ -13,7 +13,7 @@ import os
 import re
 from typing import Any
 
-from ..database import DatabaseClient, quote_sql_identifier
+from ..database import quote_sql_identifier
 from .list_files import detect_format, strip_uuid_prefix
 
 
@@ -84,7 +84,7 @@ FORMAT_READERS = {
 
 def import_file(
     file_path: str,
-    db_client: DatabaseClient,
+    db_client,
     table_name: str | None = None,
     data_dir: str | None = None,
 ) -> dict[str, Any]:
@@ -93,7 +93,7 @@ def import_file(
 
     Args:
         file_path: Path to the file (absolute or relative to data_dir)
-        db_client: DatabaseClient instance
+        db_client instance
         table_name: Optional table name (auto-generated from filename if not provided)
         data_dir: Base directory for resolving relative paths
 
@@ -207,7 +207,7 @@ def _import_json(
     escaped_path: str,
     quoted_table: str,
     table_name: str,
-    db_client: DatabaseClient,
+    db_client,
 ) -> dict[str, Any]:
     """
     Import JSON file, handling both array-of-objects and key-value-map formats.
@@ -288,10 +288,20 @@ def _import_json(
             field_summary = _get_field_summary(detail_quoted, db_client, queries)
             if field_summary:
                 import_result["field_summary"] = field_summary
-                import_result["action_required"] = (
-                    "Multiple field types found. Ask the user which fields "
-                    "contain the data they want to analyze."
-                )
+
+                data_fields = field_summary.get("data_fields", [])
+                metadata_fields = field_summary.get("metadata_fields", [])
+
+                if data_fields and metadata_fields:
+                    data_names = ", ".join(f["prefix"] for f in data_fields)
+                    meta_names = ", ".join(f["field_name"] for f in metadata_fields)
+                    import_result["action_required"] = (
+                        f"Data fields detected: {data_names}. "
+                        f"Metadata fields (likely noise): {meta_names}. "
+                        f"Ask the user which fields to analyze. "
+                        f"To get clean data, query only data fields from '{detail_table}' "
+                        f"and strip any prefixes from field_value if needed."
+                    )
 
         return import_result
 
@@ -303,7 +313,7 @@ def _import_json(
         }
 
 
-def _get_field_summary(detail_quoted: str, db_client: DatabaseClient, queries: dict) -> dict | None:
+def _get_field_summary(detail_quoted: str, db_client, queries: dict) -> dict | None:
     """
     Analyze field names and auto-classify into data fields vs metadata.
 
@@ -369,7 +379,7 @@ def _get_import_result(
     quoted_table: str,
     table_name: str,
     file_path: str,
-    db_client: DatabaseClient,
+    db_client,
 ) -> dict[str, Any]:
     """Get table info after import."""
     # Row count

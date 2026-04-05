@@ -1,37 +1,39 @@
 """
-Import Data tool - Accept raw file content from chat and load into DuckDB table.
+Import Data tool - Accept raw file content and load into DuckDB table.
 
-This tool receives the file content as a string (passed by the LLM from a chat
-upload) and creates a queryable table without needing shared filesystem access.
+Writes content to a temp file, then delegates to import_file for
+consistent handling (format detection, detail table, field summary).
 """
 
-import json
 import os
 import tempfile
 from typing import Any
 
-from ..database import DatabaseClient, quote_sql_identifier
+from .import_file import import_file
+
 
 DESCRIPTION = (
     "Import raw data content (JSON, CSV) directly into a DuckDB table. "
-    "Use this when a user uploads a file in chat. The LLM should pass the "
-    "file content as the 'content' argument. Auto-detects format and schema."
+    "Pass file content as a string. Auto-detects format and schema."
 )
 
 
 def import_data(
     content: str,
-    db_client: DatabaseClient,
+    db_client,
     format: str = "auto",
     table_name: str = "uploaded_data",
 ) -> dict[str, Any]:
     """
     Import raw data content as a DuckDB table.
 
+    Writes to temp file, delegates to import_file for full processing
+    (format detection, detail table creation, field summary).
+
     Args:
-        content: Raw file content (JSON string, CSV text, etc.)
-        db_client: DatabaseClient instance
-        format: Data format - "json", "csv", or "auto" (detect from content)
+        content: Raw file content (JSON string, CSV text)
+        db_client: DatabaseClient or SessionClient instance
+        format: Data format - "json", "csv", or "auto"
         table_name: Table name to create
 
     Returns:
@@ -41,18 +43,24 @@ def import_data(
         if not content or not content.strip():
             return {"success": False, "error": "Empty content provided."}
 
-        # Auto-detect format
+        MAX_CONTENT_SIZE = 50 * 1024 * 1024  # 50 MB
+        if len(content) > MAX_CONTENT_SIZE:
+            return {
+                "success": False,
+                "error": f"Content too large ({len(content)} bytes). Max {MAX_CONTENT_SIZE} bytes.",
+                "hint": "Use import_file with a file on disk instead.",
+            }
+
+        # Detect suffix for temp file
         if format == "auto":
             stripped = content.strip()
-            if stripped.startswith("{") or stripped.startswith("["):
-                format = "json"
-            else:
-                format = "csv"
+            suffix = ".json" if stripped.startswith("{") or stripped.startswith("[") else ".csv"
+        elif format == "json":
+            suffix = ".json"
+        else:
+            suffix = ".csv"
 
-        quoted_table = quote_sql_identifier(table_name)
-
-        # Write content to temp file so DuckDB can read it
-        suffix = ".json" if format == "json" else ".csv"
+        # Write to temp file
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=suffix, delete=False, dir="/tmp"
         ) as f:
@@ -60,14 +68,9 @@ def import_data(
             tmp_path = f.name
 
         try:
-            escaped_path = tmp_path.replace("'", "''")
-
-            if format == "json":
-                result = _import_json_content(escaped_path, quoted_table, table_name, db_client)
-            else:
-                sql = f"CREATE OR REPLACE TABLE {quoted_table} AS SELECT * FROM read_csv_auto('{escaped_path}')"
-                db_client.query(sql)
-                result = _get_result(quoted_table, table_name, db_client)
+            # Delegate to import_file — gets full processing:
+            # format detection, detail table, field summary, sql examples
+            result = import_file(tmp_path, db_client, table_name, data_dir=None)
         finally:
             os.unlink(tmp_path)
 
@@ -79,75 +82,3 @@ def import_data(
             "error": str(e),
             "errorType": type(e).__name__,
         }
-
-
-def _import_json_content(
-    escaped_path: str,
-    quoted_table: str,
-    table_name: str,
-    db_client: DatabaseClient,
-) -> dict[str, Any]:
-    """Import JSON, handling both array and key-value object formats."""
-    # Try array of objects first
-    try:
-        sql = f"CREATE OR REPLACE TABLE {quoted_table} AS SELECT * FROM read_json_auto('{escaped_path}')"
-        result = db_client.query(sql)
-        if result.get("success", True):
-            info = _get_result(quoted_table, table_name, db_client)
-            if info.get("rowCount", 0) > 1:
-                return info
-    except Exception:
-        pass
-
-    # Fall back to key-value object (like ACL files)
-    try:
-        sql = f"""
-            CREATE OR REPLACE TABLE {quoted_table} AS
-            SELECT
-                j.key as entity_key,
-                j.value as entity_value
-            FROM read_text('{escaped_path}') t,
-            LATERAL json_each(t.content::JSON) j
-        """
-        result = db_client.query(sql)
-        if result.get("success", True):
-            info = _get_result(quoted_table, table_name, db_client)
-            if info.get("rowCount", 0) > 0:
-                info["note"] = (
-                    "JSON key-value object imported as rows (entity_key, entity_value). "
-                    f"Use json_extract on entity_value to query nested fields. "
-                    f"Example: SELECT entity_key, entity_value->>'type' FROM {table_name}"
-                )
-                return info
-    except Exception as e:
-        return {
-            "success": False,
-            "error": f"Could not parse JSON: {e}",
-        }
-
-
-def _get_result(
-    quoted_table: str,
-    table_name: str,
-    db_client: DatabaseClient,
-) -> dict[str, Any]:
-    """Get table info after import."""
-    count_result = db_client.query(f"SELECT count(*) as cnt FROM {quoted_table}")
-    row_count = 0
-    if count_result.get("success") and count_result.get("rows"):
-        row_count = count_result["rows"][0][0]
-
-    cols_result = db_client.query(f"DESCRIBE {quoted_table}")
-    columns = []
-    if cols_result.get("success") and cols_result.get("rows"):
-        for row in cols_result["rows"]:
-            columns.append({"name": row[0], "type": row[1]})
-
-    return {
-        "success": True,
-        "table": table_name,
-        "rowCount": row_count,
-        "columnCount": len(columns),
-        "columns": columns,
-        "hint": f"Table '{table_name}' is ready. Use execute_query to analyze it.",
-    }

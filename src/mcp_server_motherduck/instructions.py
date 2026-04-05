@@ -9,20 +9,27 @@ INSTRUCTIONS_BASE = """Execute SQL queries against DuckDB and MotherDuck databas
 
 ## Available Tools
 
-- `list_files`: List structured data files (JSON, CSV, Parquet) available for import
-- `import_file`: Import a file as a table with auto-detected schema (supports JSON, JSONL, CSV, Parquet)
-- `describe_data`: Get summary statistics for a table (row count, types, samples, nulls, uniques)
+- `list_files`: Find data files by name or ID. Always pass the file name/ID from chat context as filter.
+- `import_file`: Import a file as a table with auto-detected schema (JSON, CSV, Parquet)
+- `describe_data`: Get summary statistics for a table (row count, types, samples)
 - `execute_query`: Execute SQL queries (DuckDB SQL dialect)
+- `export_csv`: Execute a query and export results as a downloadable CSV file
 - `list_databases`: List all available databases
 - `list_tables`: List tables and views in a database
 - `list_columns`: List columns of a table or view
 
 ## Recommended Workflow
 
-1. Use `list_files` to see available data files
-2. Use `import_file` to load a file as a table (auto-detects format and schema)
+1. Use `list_files(filter="filename from chat")` to find the user's file
+2. Use `import_file` to load it as a table (auto-detects format and schema)
 3. Use `describe_data` to understand the table structure and data
 4. Use `execute_query` for analysis
+5. Use `export_csv` to save results as a downloadable file
+
+## Important: File Access
+
+When a user uploads a file in chat, use the file name or ID provided in the chat context.
+Always pass it as a filter to `list_files` — do NOT list all files without a filter.
 
 ## DuckDB SQL Quick Reference
 

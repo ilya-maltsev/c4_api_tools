@@ -4,7 +4,7 @@ Describe Data tool - Get summary statistics for a table without writing SQL.
 
 from typing import Any
 
-from ..database import DatabaseClient, quote_sql_identifier
+from ..database import quote_sql_identifier
 
 DESCRIPTION = (
     "Get summary statistics for a table: row count, column types, sample values, "
@@ -14,14 +14,14 @@ DESCRIPTION = (
 
 def describe_data(
     table: str,
-    db_client: DatabaseClient,
+    db_client,
 ) -> dict[str, Any]:
     """
     Get comprehensive summary statistics for a table.
 
     Args:
         table: Table name to describe
-        db_client: DatabaseClient instance
+        db_client: DatabaseClient or SessionClient instance
 
     Returns:
         JSON-serializable dict with table statistics

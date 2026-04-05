@@ -15,23 +15,29 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ARCHIVE="${SCRIPT_DIR}/mcp-duckdb-images.tar.gz"
-IMAGE="mcp-server-motherduck:latest"
+MCP_IMAGE="mcp-server-motherduck:latest"
+NGINX_IMAGE="nginx:alpine"
+IMAGES="${MCP_IMAGE} ${NGINX_IMAGE}"
 
 build_images() {
-    echo "=== Building ${IMAGE} ==="
+    echo "=== Pulling ${NGINX_IMAGE} ==="
+    docker pull "${NGINX_IMAGE}"
+
+    echo ""
+    echo "=== Building ${MCP_IMAGE} ==="
     docker build \
         -f "${SCRIPT_DIR}/Dockerfile" \
-        -t "${IMAGE}" \
+        -t "${MCP_IMAGE}" \
         "${REPO_ROOT}/"
 
     echo ""
     echo "=== Images built ==="
-    docker images --format "  {{.Repository}}:{{.Tag}}  {{.Size}}" | grep -E "^  mcp-server-motherduck"
+    docker images --format "  {{.Repository}}:{{.Tag}}  {{.Size}}" | grep -E "^  (mcp-server-motherduck|nginx)"
 }
 
 export_images() {
     echo "=== Exporting images to ${ARCHIVE} ==="
-    docker save ${IMAGE} | gzip > "${ARCHIVE}"
+    docker save ${IMAGES} | gzip > "${ARCHIVE}"
     echo "  $(du -h "${ARCHIVE}" | cut -f1)  ${ARCHIVE}"
     echo "=== Export done ==="
 }
@@ -46,7 +52,7 @@ import_images() {
     gunzip -c "${ARCHIVE}" | docker load
     echo ""
     echo "=== Images loaded ==="
-    docker images --format "  {{.Repository}}:{{.Tag}}  {{.Size}}" | grep -E "^  mcp-server-motherduck"
+    docker images --format "  {{.Repository}}:{{.Tag}}  {{.Size}}" | grep -E "^  (mcp-server-motherduck|nginx)"
     echo ""
     echo "Now run:  cd docker && docker compose up -d"
 }
